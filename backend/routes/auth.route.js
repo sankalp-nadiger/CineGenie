@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login } from "../controllers/authController.js";
+import { register, login } from "../controllers/auth.controller.js";
 import User from "../models/User.js";
 import { google } from "googleapis";
 import jwt from "jsonwebtoken";

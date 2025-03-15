@@ -2,11 +2,11 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import groupRoutes from "./routes/groupRoutes.js";
-import movieRoutes from "./routes/movieRoutes.js";
-import searchRoutes from "./routes/searchRoutes.js";
+import authRoutes from "./routes/auth.route.js";
+import userRoutes from "./routes/user.route.js";
+import groupRoutes from "./routes/group.route.js";
+import movieRoutes from "./routes/movie.route.js";
+import searchRoutes from "./routes/search.route.js";
 
 const app = express();
 app.use(cors());

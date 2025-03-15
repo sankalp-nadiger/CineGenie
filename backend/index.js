@@ -4,7 +4,7 @@ import app from './app.js';
 import { Server } from "socket.io";
 import http from "http";
 
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: './.env.local' });
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -28,7 +28,6 @@ let activeSessions = {};
 // Connect to MongoDB and start server
 connectDB()
     .then(() => {
-        //await insertDoctors();
         server.listen(process.env.PORT || 8000, () => {
             console.log(`⚙️ Server is running at port : ${process.env.PORT || 8000}`);
         });
