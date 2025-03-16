@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Movie Tracker',
+  title: 'CineGenie',
   description: 'Developed with love by Sankalp',
 };
 

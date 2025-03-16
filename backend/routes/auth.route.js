@@ -1,6 +1,6 @@
 import express from "express";
 import { register, login } from "../controllers/auth.controller.js";
-import User from "../models/User.js";
+import User from "../models/user.model.js";
 import { google } from "googleapis";
 import jwt from "jsonwebtoken";
 
@@ -25,7 +25,7 @@ const loginOAuthClient = new google.auth.OAuth2(
 );
   
   // Route to Start Google OAuth
-  app.get("/auth/google-url", (req, res) => {
+  router.get("/auth/google-url", (req, res) => {
     const oauth2Client = signupOAuthClient;
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",

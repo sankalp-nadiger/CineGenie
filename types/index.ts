@@ -33,3 +33,32 @@ export interface DashboardStats {
   recentlyWatched: WatchEntry[];
   averageRating: number;
 }
+export interface ChatGroup {
+  id: string;
+  name: string;
+  imageUrl: string;
+  lastMessage: string;
+  unreadCount: number;
+  online?: boolean;
+  typing?: boolean;
+  timestamp?: string;
+  messageStatus?: 'sent' | 'delivered' | 'read';
+};
+
+export interface Message {
+  id: string;
+  userId: string;
+  username: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface Movie {
+  id: string;
+  title: string;
+  posterUrl: string;
+  genre: string;
+  releaseYear: number;
+  director: string;
+  watched: boolean;
+}
