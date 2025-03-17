@@ -299,129 +299,304 @@ export default function Home() {
       </Head>
       
       <div className="scene-container" ref={mountRef}>
-        <div className={`content-container ${loaded ? 'visible' : ''}`}>
-          <div className="camera-icons">
-            <div className="camera left-camera">
-              <div className="camera-body"></div>
-              <div className="camera-lens"></div>
-              <div className="camera-handle"></div>
-              <div className="camera-viewfinder"></div>
-              <div className="film-reels">
-                <div className="film-reel"></div>
-                <div className="film-reel"></div>
-              </div>
-            </div>
-            
-            <div className="central-content">
-              <h1 className="title">CineGenie</h1>
-              <p className="subtitle">Your magical companion for films & discussions</p>
-              <Link href="/Auth">
-                <button className="auth-button">Enter the Realm</button>
-              </Link>
-            </div>
-            
-            <div className="camera right-camera">
-              <div className="camera-body"></div>
-              <div className="camera-lens"></div>
-              <div className="camera-handle"></div>
-              <div className="camera-viewfinder"></div>
-              <div className="film-reels">
-                <div className="film-reel"></div>
-                <div className="film-reel"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className={`content-overlay ${loaded ? 'visible' : ''}`}>
+    <div className="camera left-camera">
+      <div className="camera-body"></div>
+      <div className="camera-lens"></div>
+      <div className="camera-handle"></div>
+      <div className="camera-viewfinder"></div>
+      <div className="film-reels">
+        <div className="film-reel"></div>
+        <div className="film-reel"></div>
       </div>
+    </div>
+    
+    <div className="central-content">
+      <h1 className="title">CineGenie</h1>
+      <p className="subtitle">Your magical companion for films & discussions</p>
+      <Link href="/Auth">
+        <button className="auth-button">Enter the Realm</button>
+      </Link>
+    </div>
+    
+    <div className="camera right-camera">
+      <div className="camera-body"></div>
+      <div className="camera-lens"></div>
+      <div className="camera-handle"></div>
+      <div className="camera-viewfinder"></div>
+      <div className="film-reels">
+        <div className="film-reel"></div>
+        <div className="film-reel"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      <style jsx>{`
-        .scene-container {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100vh;
-          z-index: 1;
-        }
+<style jsx>{`
+  .scene-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+  }
 
-        .content-container {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
-          z-index: 10;
-          opacity: 0;
-          transition: opacity 1s ease-in-out;
-          width: 90%;
-          max-width: 1200px
+  .content-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .content-overlay.visible {
+    opacity: 1;
+  }
+
+  .central-content {
+  text-align: center;
+  z-index: 12;
+  padding: 0 20px;
+  transform: translateY(65px);
 }
-
-.content-container.visible {
-  opacity: 1;
-}
-
-.title {
-  font-family: 'Audiowide', cursive;
-  font-size: 5rem;
-  color: #f9f3e5;
-  margin: 0;
-  text-shadow: 0 0 10px rgba(92, 198, 255, 0.7), 
-               0 0 20px rgba(92, 198, 255, 0.5),
-               0 0 30px rgba(92, 198, 255, 0.3);
-  letter-spacing: 2px;
-}
-
-.subtitle {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 300;
-  font-size: 1.5rem;
-  color: #f0f0f0;
-  margin: 1rem 0 2rem;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-  letter-spacing: 0.5px;
-}
-
-.auth-button {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 1.2rem;
-  background: linear-gradient(135deg, #3a8bd8 0%, #215d9d 100%);
-  color: #fff;
-  border: none;
-  border-radius: 30px;
-  padding: 0.8rem 2.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(33, 93, 157, 0.4);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.auth-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(33, 93, 157, 0.6);
-}
-
-.auth-button:active {
-  transform: translateY(1px);
-}
-
-@media (max-width: 768px) {
   .title {
-    font-size: 3rem;
+    font-family: 'Audiowide', cursive;
+    font-size: 5rem;
+    color: #f9f3e5;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(92, 198, 255, 0.7), 
+                 0 0 20px rgba(92, 198, 255, 0.5),
+                 0 0 30px rgba(92, 198, 255, 0.3);
+    letter-spacing: 2px;
   }
-  
+
   .subtitle {
-    font-size: 1.2rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 1.5rem;
+    color: #f0f0f0;
+    margin: 1rem 0 2rem;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
   }
-  
+
   .auth-button {
-    font-size: 1rem;
-    padding: 0.7rem 2rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #3a8bd8 0%, #215d9d 100%);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.8rem 2.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(33, 93, 157, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
+
+  .auth-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(33, 93, 157, 0.6);
+  }
+
+  .auth-button:active {
+    transform: translateY(1px);
+  }
+
+  /* Camera styling */
+  .camera {
+    position: relative;
+    width: 120px;
+    height: 80px;
+    z-index: 11;
+  }
+
+  .camera-body {
+    width: 120px;
+    height: 80px;
+    background-color: #444;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    position: relative;
+    border: 2px solid #555;
+  }
+
+  .camera-lens {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #555, #222);
+    left: 35px;
+    top: 15px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 5px rgba(255, 255, 255, 0.2);
+    border: 3px solid #333;
+  }
+
+  .camera-handle {
+    position: absolute;
+    width: 20px;
+    height: 30px;
+    background-color: #333;
+    top: -30px;
+    right: 30px;
+    border-radius: 5px 5px 0 0;
+    border: 1px solid #555;
+  }
+
+  .camera-viewfinder {
+    position: absolute;
+    width: 25px;
+    height: 15px;
+    background-color: #333;
+    top: -15px;
+    left: 20px;
+    border-radius: 3px;
+    border: 1px solid #555;
+  }
+
+  .film-reels {
+    position: absolute;
+    display: flex;
+    gap: 10px;
+    bottom: -20px;
+    left: 20px;
+  }
+
+  .film-reel {
+    width: 30px;
+    height: 30px;
+    background-color: #666;
+    border-radius: 50%;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 2px 5px rgba(0, 0, 0, 0.3);
+    position: relative;
+    border: 1px solid #777;
+  }
+
+  .film-reel:before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #444;
+    border-radius: 50%;
+    top: 10px;
+    left: 10px;
+    border: 1px solid #555;
+  }
+
+ /* Camera positioning - moved down by 55px */
+.left-camera {
+  position: absolute;
+  left: 15%;
+  transform: rotate(-20deg) translateY(55px); 
 }
-      `}</style>
+
+.right-camera {
+  position: absolute;
+  right: 15%;
+  transform: rotate(20deg) translateY(55px); /* Added translateY to move down 55px */
+}
+
+/* Spotlight effects - reduced opacity */
+.left-camera:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 60px solid transparent;
+  border-right: 180px solid rgba(92, 198, 255, 0.07); /* Reduced opacity from 0.1 to 0.07 */
+  border-bottom: 60px solid transparent;
+  top: 10px;
+  left: 90px;
+  transform: rotate(0deg);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.right-camera:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 60px solid transparent;
+  border-left: 180px solid rgba(92, 198, 255, 0.07); /* Reduced opacity from 0.1 to 0.07 */
+  border-bottom: 60px solid transparent;
+  top: 10px;
+  right: 90px;
+  transform: rotate(0deg);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Reduced opacity for lens flare effect */
+.camera-lens:after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.08)); /* Reduced opacity */
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 
+    0 0 10px 5px rgba(92, 198, 255, 0.2), /* Reduced opacity from 0.3 */
+    0 0 20px 10px rgba(92, 198, 255, 0.08); /* Reduced opacity from 0.1 */
+}
+
+/* Reduced opacity for beam of light from the lens */
+.left-camera .camera-lens:before {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 20px;
+  background: radial-gradient(ellipse at left, rgba(92, 198, 255, 0.2), transparent 80%); /* Reduced opacity from 0.3 */
+  top: 15px;
+  left: 45px;
+  transform: rotate(0deg);
+  filter: blur(40px);
+}
+
+.right-camera .camera-lens:before {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 20px;
+  background: radial-gradient(ellipse at right, rgba(92, 198, 255, 0.2), transparent 80%); /* Reduced opacity from 0.3 */
+  top: 15px;
+  right: 45px;
+  transform: rotate(0deg);
+  filter: blur(40px);
+}
+  @media (max-width: 768px) {
+    .title {
+      font-size: 3rem;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+    }
+    
+    .auth-button {
+      font-size: 1rem;
+      padding: 0.7rem 2rem;
+    }
+
+    .left-camera, .right-camera {
+      display: none; /* Hide cameras on mobile */
+    }
+  }
+`}</style>
     </>
   );
 };

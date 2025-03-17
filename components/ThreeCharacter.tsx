@@ -29,6 +29,8 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
+    // Make background transparent
+    scene.background = null;
     sceneRef.current = scene;
 
     // Camera setup
@@ -38,19 +40,20 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
       0.1,
       1000
     );
-    camera.position.z = 5;
-    camera.position.y = 2;
+    camera.position.z = 3; // Move camera closer
+    camera.position.y = 1; // Adjust camera height
     cameraRef.current = camera;
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0); // Transparent background
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Increase ambient light
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -184,7 +187,8 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
 
       // Position the robot
       robot.position.y = 0;
-      robot.scale.set(0.8, 0.8, 0.8);
+      robot.scale.set(1.5, 1.5, 1.5); // Increase size by 50%
+      robot.rotation.y = Math.PI * 0.05; // Slight rotation for better view
       
       // Add as a reference to animate
       characterRef.current = robot;
@@ -202,49 +206,69 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
 
     // Create animations
     const setupAnimations = () => {
-      // Basic idle animation
+      // Basic idle animation - subtle swaying
       const idleKF = new THREE.KeyframeTrack(
-        '.position[y]',
-        [0, 1, 2],
-        [0, 0.05, 0]
+        '.rotation[y]',
+        [0, 1.5, 3],
+        [Math.PI * 0.05, Math.PI * 0.03, Math.PI * 0.05]
       );
       
-      const idleClip = new THREE.AnimationClip('idle', 2, [idleKF]);
+      const idleClip = new THREE.AnimationClip('idle', 3, [idleKF]);
       animationsRef.current.idle = mixer.clipAction(idleClip);
       animationsRef.current.idle.setLoop(THREE.LoopRepeat, Infinity);
       
-      // Waving animation - using named object instead of index
+      // Waving animation - more natural wave
       if (rightArmRef.current) {
         const wavingClip = new THREE.AnimationClip('waving', 2, [
           new THREE.NumberKeyframeTrack(
             'rightArm.rotation[z]',
             [0, 0.5, 1, 1.5, 2],
-            [0, Math.PI/4, 0, Math.PI/4, 0]
+            [0, -Math.PI/6, 0, -Math.PI/6, 0]
+          ),
+          new THREE.NumberKeyframeTrack(
+            'rightArm.rotation[y]',
+            [0, 0.5, 1, 1.5, 2],
+            [0, Math.PI/8, 0, Math.PI/8, 0]
           )
         ]);
         animationsRef.current.waving = mixer.clipAction(wavingClip);
         animationsRef.current.waving.setLoop(THREE.LoopRepeat, 2);
       }
       
-      // Thinking animation
+      // Thinking animation - match CSS animation
       if (headRef.current) {
         const thinkingClip = new THREE.AnimationClip('thinking', 2, [
           new THREE.NumberKeyframeTrack(
-            'head.rotation[x]',
+            'head.rotation[z]',
             [0, 1, 2],
-            [0, Math.PI/8, 0]
+            [0, Math.PI/18, 0]
           )
         ]);
         animationsRef.current.thinking = mixer.clipAction(thinkingClip);
         animationsRef.current.thinking.setLoop(THREE.LoopRepeat, 2);
       }
       
-      // Celebrating animation
+      // Celebrating animation - match CSS animation
       const celebratingTracks = [
         new THREE.NumberKeyframeTrack(
           '.position[y]',
           [0, 0.5, 1],
-          [0, 0.5, 0]
+          [0, 0.3, 0]
+        ),
+        new THREE.NumberKeyframeTrack(
+          '.scale[x]',
+          [0, 0.5, 1],
+          [1.5, 1.65, 1.5]
+        ),
+        new THREE.NumberKeyframeTrack(
+          '.scale[y]',
+          [0, 0.5, 1],
+          [1.5, 1.65, 1.5]
+        ),
+        new THREE.NumberKeyframeTrack(
+          '.scale[z]',
+          [0, 0.5, 1],
+          [1.5, 1.65, 1.5]
         )
       ];
       
@@ -253,12 +277,12 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
           new THREE.NumberKeyframeTrack(
             'rightArm.rotation[z]',
             [0, 0.5, 1],
-            [0, -Math.PI/2, 0]
+            [0, -Math.PI/3, 0]
           ),
           new THREE.NumberKeyframeTrack(
             'leftArm.rotation[z]',
             [0, 0.5, 1],
-            [0, Math.PI/2, 0]
+            [0, Math.PI/3, 0]
           )
         );
       }
@@ -267,162 +291,188 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
       animationsRef.current.celebrating = mixer.clipAction(celebratingClip);
       animationsRef.current.celebrating.setLoop(THREE.LoopRepeat, 3);
       
-      // Pointing animation
+      // Pointing animation - more natural pointing
       if (rightArmRef.current) {
         const pointingClip = new THREE.AnimationClip('pointing', 2, [
           new THREE.NumberKeyframeTrack(
             'rightArm.rotation[x]',
-            [0, 0.5, 1, 1.5, 2],
-            [0, Math.PI/4, Math.PI/4, Math.PI/4, 0]
+            [0, 0.5, 1.5, 2],
+            [0, Math.PI/4, Math.PI/4, 0]
+          ),
+          new THREE.NumberKeyframeTrack(
+            'rightArm.rotation[y]',
+            [0, 0.5, 1.5, 2],
+            [0, Math.PI/8, Math.PI/8, 0]
           )
         ]);
         animationsRef.current.pointing = mixer.clipAction(pointingClip);
         animationsRef.current.pointing.setLoop(THREE.LoopRepeat, 1);
       }
       
-      // Surprised animation
+      // Surprised animation - more dramatic
       if (headRef.current) {
         const surprisedClip = new THREE.AnimationClip('surprised', 1, [
           new THREE.VectorKeyframeTrack(
             'head.scale',
-            [0, 0.5, 1],
-            [1, 1, 1, 1.2, 1.2, 1.2, 1, 1, 1]
+            [0, 0.2, 0.8, 1],
+            [1, 1, 1, 1.15, 1.15, 1.15, 1, 1, 1]
+          ),
+          new THREE.NumberKeyframeTrack(
+            '.position[y]',
+            [0, 0.2, 0.4, 1],
+            [0, 0.2, 0, 0]
           )
         ]);
         animationsRef.current.surprised = mixer.clipAction(surprisedClip);
         animationsRef.current.surprised.setLoop(THREE.LoopOnce, 1);
       }
       
-      // Processing animation
-      const processingClip = new THREE.AnimationClip('processing', 2, [
+      // Processing animation - less spinning, more side-to-side
+     // Processing animation - less spinning, more side-to-side
+     const processingClip = new THREE.AnimationClip('processing', 3, [
+      new THREE.NumberKeyframeTrack(
+        '.rotation[y]',
+        [0, 0.75, 1.5, 2.25, 3],
+        [Math.PI * 0.05, Math.PI * 0.15, Math.PI * 0.05, -Math.PI * 0.05, Math.PI * 0.05]
+      ),
+      new THREE.NumberKeyframeTrack(
+        'head.rotation[z]',
+        [0, 0.75, 1.5, 2.25, 3],
+        [0, Math.PI/20, 0, -Math.PI/20, 0]
+      )
+    ]);
+    animationsRef.current.processing = mixer.clipAction(processingClip);
+    animationsRef.current.processing.setLoop(THREE.LoopRepeat, 2);
+    
+    // Shielding animation - more natural arm movement
+    if (rightArmRef.current) {
+      const shieldingClip = new THREE.AnimationClip('shielding', 2, [
         new THREE.NumberKeyframeTrack(
-          '.rotation[y]',
-          [0, 2],
-          [0, Math.PI * 2]
+          'rightArm.rotation[x]',
+          [0, 0.5, 1.5, 2],
+          [0, Math.PI/6, Math.PI/6, 0]
+        ),
+        new THREE.NumberKeyframeTrack(
+          'rightArm.rotation[y]',
+          [0, 0.5, 1.5, 2],
+          [0, Math.PI/3, Math.PI/3, 0]
         )
       ]);
-      animationsRef.current.processing = mixer.clipAction(processingClip);
-      animationsRef.current.processing.setLoop(THREE.LoopRepeat, 2);
-      
-      // Shielding animation - New animation
-      if (rightArmRef.current) {
-        const shieldingClip = new THREE.AnimationClip('shielding', 2, [
-          new THREE.NumberKeyframeTrack(
-            'rightArm.rotation[y]',
-            [0, 1, 2],
-            [0, Math.PI/2, 0]
-          )
-        ]);
-        animationsRef.current.shielding = mixer.clipAction(shieldingClip);
-        animationsRef.current.shielding.setLoop(THREE.LoopOnce, 1);
-      }
-      
-      // Waiting animation - New animation
-      const waitingClip = new THREE.AnimationClip('waiting', 4, [
-        new THREE.NumberKeyframeTrack(
-          '.position[y]',
-          [0, 1, 2, 3, 4],
-          [0, -0.05, 0, -0.05, 0]
-        )
-      ]);
-      animationsRef.current.waiting = mixer.clipAction(waitingClip);
-      animationsRef.current.waiting.setLoop(THREE.LoopRepeat, Infinity);
-      
-      // Typing animation - New animation
-      if (leftArmRef.current && rightArmRef.current) {
-        const typingClip = new THREE.AnimationClip('typing', 1, [
-          new THREE.NumberKeyframeTrack(
-            'leftArm.rotation[x]',
-            [0, 0.25, 0.5, 0.75, 1],
-            [0, -Math.PI/8, 0, -Math.PI/8, 0]
-          ),
-          new THREE.NumberKeyframeTrack(
-            'rightArm.rotation[x]',
-            [0, 0.25, 0.5, 0.75, 1],
-            [-Math.PI/8, 0, -Math.PI/8, 0, -Math.PI/8]
-          )
-        ]);
-        animationsRef.current.typing = mixer.clipAction(typingClip);
-        animationsRef.current.typing.setLoop(THREE.LoopRepeat, Infinity);
-      }
-      
-      // Start with idle animation
-      animationsRef.current.idle.play();
-    };
-
-    setupAnimations();
-
-    // Animation loop
-    const animate = () => {
-      const delta = clockRef.current.getDelta();
-      
-      if (mixerRef.current) {
-        mixerRef.current.update(delta);
-      }
-      
-      if (characterRef.current) {
-        characterRef.current.rotation.y += 0.005;
-      }
-      
-      rendererRef.current?.render(scene, camera);
-      frameIdRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-    setLoaded(true);
-
-    // Cleanup
-    return () => {
-      if (frameIdRef.current) {
-        cancelAnimationFrame(frameIdRef.current);
-      }
-      
-      if (rendererRef.current && mountRef.current) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
-      }
-      
-      if (mixerRef.current) {
-        mixerRef.current.stopAllAction();
-      }
-    };
-  }, []);
-
-  // Update character animation state
-  useEffect(() => {
-    if (!loaded || !mixerRef.current || !animationsRef.current) return;
-    
-    // Stop all animations
-    Object.values(animationsRef.current).forEach(action => {
-      action.stop();
-    });
-    
-    // Start the requested animation
-    if (animationsRef.current[state]) {
-      animationsRef.current[state].reset().play();
-    } else {
-      // Default to idle if the state doesn't exist
-      animationsRef.current.idle.reset().play();
+      animationsRef.current.shielding = mixer.clipAction(shieldingClip);
+      animationsRef.current.shielding.setLoop(THREE.LoopOnce, 1);
     }
-  }, [state, loaded]);
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (!mountRef.current || !rendererRef.current || !cameraRef.current) return;
-      
-      const width = mountRef.current.clientWidth;
-      const height = mountRef.current.clientHeight;
-      
-      rendererRef.current.setSize(width, height);
-      cameraRef.current.aspect = width / height;
-      cameraRef.current.updateProjectionMatrix();
-    };
     
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    // Waiting animation - soft bouncing
+    const waitingClip = new THREE.AnimationClip('waiting', 3, [
+      new THREE.NumberKeyframeTrack(
+        '.position[y]',
+        [0, 1.5, 3],
+        [0, -0.08, 0]
+      ),
+      new THREE.NumberKeyframeTrack(
+        '.rotation[z]',
+        [0, 0.75, 1.5, 2.25, 3],
+        [0, 0.01, 0, -0.01, 0]
+      )
+    ]);
+    animationsRef.current.waiting = mixer.clipAction(waitingClip);
+    animationsRef.current.waiting.setLoop(THREE.LoopRepeat, Infinity);
+    
+    // Typing animation - more natural typing motion
+    if (leftArmRef.current && rightArmRef.current) {
+      const typingClip = new THREE.AnimationClip('typing', 1, [
+        new THREE.NumberKeyframeTrack(
+          'leftArm.rotation[x]',
+          [0, 0.25, 0.5, 0.75, 1],
+          [0, -Math.PI/10, 0, -Math.PI/10, 0]
+        ),
+        new THREE.NumberKeyframeTrack(
+          'rightArm.rotation[x]',
+          [0, 0.25, 0.5, 0.75, 1],
+          [-Math.PI/10, 0, -Math.PI/10, 0, -Math.PI/10]
+        )
+      ]);
+      animationsRef.current.typing = mixer.clipAction(typingClip);
+      animationsRef.current.typing.setLoop(THREE.LoopRepeat, Infinity);
+    }
+    
+    // Start with idle animation
+    animationsRef.current.idle.play();
+  };
 
-  return <div ref={mountRef} className="w-full h-full" />;
+  setupAnimations();
+
+  // Animation loop
+  const animate = () => {
+    const delta = clockRef.current.getDelta();
+    
+    if (mixerRef.current) {
+      mixerRef.current.update(delta);
+    }
+    
+    // Remove continuous spinning
+    // if (characterRef.current) {
+    //   characterRef.current.rotation.y += 0.005;
+    // }
+    
+    rendererRef.current?.render(scene, camera);
+    frameIdRef.current = requestAnimationFrame(animate);
+  };
+  
+  animate();
+  setLoaded(true);
+
+  // Cleanup
+  return () => {
+    if (frameIdRef.current) {
+      cancelAnimationFrame(frameIdRef.current);
+    }
+    
+    if (rendererRef.current && mountRef.current) {
+      mountRef.current.removeChild(rendererRef.current.domElement);
+    }
+    
+    if (mixerRef.current) {
+      mixerRef.current.stopAllAction();
+    }
+  };
+}, []);
+
+useEffect(() => {
+  if (!loaded || !mixerRef.current || !animationsRef.current) return;
+  
+  // Stop all animations
+  Object.values(animationsRef.current).forEach(action => {
+    action.stop();
+  });
+  
+  // Start the requested animation
+  if (animationsRef.current[state]) {
+    animationsRef.current[state].reset().play();
+  } else {
+    // Default to idle if the state doesn't exist
+    animationsRef.current.idle.reset().play();
+  }
+}, [state, loaded]);
+
+// Handle window resize
+useEffect(() => {
+  const handleResize = () => {
+    if (!mountRef.current || !rendererRef.current || !cameraRef.current) return;
+    
+    const width = mountRef.current.clientWidth;
+    const height = mountRef.current.clientHeight;
+    
+    rendererRef.current.setSize(width, height);
+    cameraRef.current.aspect = width / height;
+    cameraRef.current.updateProjectionMatrix();
+  };
+  
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+return <div ref={mountRef} className="w-full h-full" />;
 };
 
 export default ThreeCharacter;

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaGoogle, FaEnvelope, FaUser, FaLock } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
+import styled from 'styled-components';
 
 // Import Three.js components with dynamic import (no SSR)
 const ThreeCharacter = dynamic(() => import('@/components/ThreeCharacter'), {
@@ -17,6 +18,136 @@ const formVariants = {
   visible: { opacity: 1, x: 0 },
   exit: { opacity: 0, x: -50 }
 };
+
+const StyledWrapper = styled.div`
+  // Dark theme colors
+  background-color: #111827;
+  
+  .form-container {
+    border-radius: 0.75rem;
+    background-color: rgba(17, 24, 39, 1);
+    padding: 2rem;
+    color: rgba(243, 244, 246, 1);
+  }
+
+  .title {
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+  }
+
+  .form {
+    margin-top: 1.5rem;
+  }
+
+  .input-group {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .input-group label {
+    display: block;
+    color: rgba(156, 163, 175, 1);
+    margin-bottom: 4px;
+  }
+
+  .input-group input {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(55, 65, 81, 1);
+    outline: 0;
+    background-color: rgba(17, 24, 39, 1);
+    padding: 0.75rem 1rem;
+    color: rgba(243, 244, 246, 1);
+  }
+
+  .input-group input:focus {
+    border-color: rgba(167, 139, 250);
+  }
+
+  .sign {
+    display: block;
+    width: 100%;
+    background-color: rgba(167, 139, 250, 1);
+    padding: 0.75rem;
+    text-align: center;
+    color: rgba(17, 24, 39, 1);
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    cursor: pointer;
+  }
+
+  .sign:disabled {
+    background-color: rgba(107, 114, 128, 0.5);
+    cursor: not-allowed;
+  }
+
+  .social-message {
+    display: flex;
+    align-items: center;
+    padding-top: 1rem;
+  }
+
+  .line {
+    height: 1px;
+    flex: 1 1 0%;
+    background-color: rgba(55, 65, 81, 1);
+  }
+
+  .social-message .message {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgba(156, 163, 175, 1);
+  }
+
+  .social-icons {
+    display: flex;
+    justify-content: center;
+  }
+
+  .social-icons .icon {
+    border-radius: 0.125rem;
+    padding: 0.75rem;
+    border: none;
+    background-color: transparent;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+
+  .social-icons .icon svg {
+    height: 1.25rem;
+    width: 1.25rem;
+    fill: #fff;
+  }
+  
+  // Add additional styles for the animation and other elements
+  .ml-32 {
+    margin-left: 8rem;
+  }
+  
+  .md\\:ml-0 {
+    @media (min-width: 768px) {
+      margin-left: 0;
+    }
+  }
+  
+  // Dark theme specific styles
+  .bg-dark {
+    background-color: #111827;
+    min-height: 100vh;
+  }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
 
 // Speech Bubble Component
 const SpeechBubble: React.FC<{message: string, show: boolean}> = ({ message, show }) => {
@@ -177,8 +308,10 @@ const Auth: React.FC = () => {
     }, 3000);
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+  // Replace the return statement with this:
+return (
+  <StyledWrapper>
+    <div className="flex items-center justify-center min-h-screen bg-dark p-4">
       <div className="relative w-full max-w-md">
         <div className="absolute -left-32 -bottom-4 w-32 h-64 cursor-pointer" onClick={interactWithCharacter}>
           <ThreeCharacter state={characterState} />
@@ -188,31 +321,15 @@ const Auth: React.FC = () => {
         </div>
         
         <motion.div 
-          className="bg-white rounded-lg shadow-lg p-8 relative overflow-hidden ml-32 md:ml-0"
+          className="form-container ml-32 md:ml-0"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <button 
-            onClick={() => {
-              setIsSignIn(!isSignIn);
-              setCharacterState('waving');
-              setAvatarMessage(isSignIn ? "Let's create a new account!" : "Welcome back!");
-              setShowMessage(true);
-              setTimeout(() => {
-                setShowMessage(false);
-                setCharacterState('idle');
-              }, 3000);
-            }} 
-            className="absolute top-4 right-4 text-sm text-blue-500 hover:underline"
-          >
-            {isSignIn ? 'Create an account' : 'Already have an account?'}
-          </button>
-          
-          <h2 className="text-2xl font-bold mb-1 text-center">
-            {isSignIn ? 'Sign in' : 'Signup now'}
-          </h2>
-          <p className="text-center text-gray-500 mb-6">Moments away from magic!</p>
+         
+          <p className="title">
+            {isSignIn ? 'Login' : 'Signup now'}
+          </p>
           
           <AnimatePresence mode="wait">
             {stage === 1 && (
@@ -223,19 +340,18 @@ const Auth: React.FC = () => {
                 animate="visible"
                 exit="exit"
                 transition={{ duration: 0.3 }}
+                className="form"
               >
                 {!isSignIn && (
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                  <div className="input-group">
+                    <label htmlFor="username">
                       What's your username? *
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                        <FaUser />
-                      </span>
                       <input
                         type="text"
                         name="username"
+                        id="username"
                         value={formData.username}
                         onChange={handleInputChange}
                         onFocus={() => {
@@ -247,7 +363,6 @@ const Auth: React.FC = () => {
                             setCharacterState('idle');
                           }, 3000);
                         }}
-                        className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Username"
                         required
                       />
@@ -255,17 +370,15 @@ const Auth: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-bold mb-1">
+                <div className="input-group">
+                  <label htmlFor="email">
                     Enter your email address *
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                      <FaEnvelope />
-                    </span>
                     <input
                       type="email"
                       name="email"
+                      id="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       onFocus={() => {
@@ -277,7 +390,6 @@ const Auth: React.FC = () => {
                           setCharacterState('idle');
                         }, 3000);
                       }}
-                      className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="you@example.com"
                       required
                     />
@@ -287,24 +399,66 @@ const Auth: React.FC = () => {
                 <button
                   onClick={goToNextStage}
                   disabled={!formData.email || (!isSignIn && !formData.username)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-300"
+                  className="sign"
                 >
                   Next
                 </button>
                 
-                <div className="mt-4 text-center">
-                  <p className="text-gray-500 mb-2">Or continue with</p>
+                <div className="social-message">
+                  <div className="line"></div>
+                  <p className="message">Or continue with</p>
+                  <div className="line"></div>
+                </div>
+                
+                <div className="social-icons">
                   <button
                     onClick={handleGoogleSignIn}
-                    className="inline-flex items-center justify-center bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 w-full"
+                    aria-label="Log in with Google"
+                    className="icon"
                   >
-                    <FaGoogle className="mr-2 text-red-500" />
-                    Sign {isSignIn ? 'in' : 'up'} with Google
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+                      <path d="M16.318 13.714v5.484h9.078c-0.37 2.354-2.745 6.901-9.078 6.901-5.458 0-9.917-4.521-9.917-10.099s4.458-10.099 9.917-10.099c3.109 0 5.193 1.318 6.38 2.464l4.339-4.182c-2.786-2.599-6.396-4.182-10.719-4.182-8.844 0-16 7.151-16 16s7.156 16 16 16c9.234 0 15.365-6.49 15.365-15.635 0-1.052-0.115-1.854-0.255-2.651z" />
+                    </svg>
+                  </button>
+                  <button
+                    aria-label="Log in with Twitter"
+                    className="icon"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+                      <path d="M31.937 6.093c-1.177 0.516-2.437 0.871-3.765 1.032 1.355-0.813 2.391-2.099 2.885-3.631-1.271 0.74-2.677 1.276-4.172 1.579-1.192-1.276-2.896-2.079-4.787-2.079-3.625 0-6.563 2.937-6.563 6.557 0 0.521 0.063 1.021 0.172 1.495-5.453-0.255-10.287-2.875-13.52-6.833-0.568 0.964-0.891 2.084-0.891 3.303 0 2.281 1.161 4.281 2.916 5.457-1.073-0.031-2.083-0.328-2.968-0.817v0.079c0 3.181 2.26 5.833 5.26 6.437-0.547 0.145-1.131 0.229-1.724 0.229-0.421 0-0.823-0.041-1.224-0.115 0.844 2.604 3.26 4.5 6.14 4.557-2.239 1.755-5.077 2.801-8.135 2.801-0.521 0-1.041-0.025-1.563-0.088 2.917 1.86 6.36 2.948 10.079 2.948 12.067 0 18.661-9.995 18.661-18.651 0-0.276 0-0.557-0.021-0.839 1.287-0.917 2.401-2.079 3.281-3.396z" />
+                    </svg>
+                  </button>
+                  <button
+                    aria-label="Log in with GitHub"
+                    className="icon"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+                      <path d="M16 0.396c-8.839 0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183 0.803 0.151 1.093-0.344 1.093-0.772 0-0.38-0.009-1.385-0.015-2.719-4.453 0.964-5.391-2.151-5.391-2.151-0.729-1.844-1.781-2.339-1.781-2.339-1.448-0.989 0.115-0.968 0.115-0.968 1.604 0.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328 0.14-1.031 0.557-1.74 1.011-2.135-3.552-0.401-7.287-1.776-7.287-7.907 0-1.751 0.62-3.177 1.645-4.297-0.177-0.401-0.719-2.031 0.141-4.235 0 0 1.339-0.427 4.4 1.641 1.281-0.355 2.641-0.532 4-0.541 1.36 0.009 2.719 0.187 4 0.541 3.043-2.068 4.381-1.641 4.381-1.641 0.859 2.204 0.317 3.833 0.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297 0 6.145-3.74 7.5-7.296 7.891 0.556 0.479 1.077 1.464 1.077 2.959 0 2.14-0.020 3.864-0.020 4.385 0 0.416 0.28 0.916 1.104 0.755 6.4-2.093 10.979-8.093 10.979-15.156 0-8.833-7.161-16-16-16z" />
+                    </svg>
                   </button>
                 </div>
+                <div className="text-center mt-4">
+  <button 
+    onClick={() => {
+      setIsSignIn(!isSignIn);
+      setCharacterState('waving');
+      setAvatarMessage(isSignIn ? "Let's create a new account!" : "Welcome back!");
+      setShowMessage(true);
+      setTimeout(() => {
+        setShowMessage(false);
+        setCharacterState('idle');
+      }, 3000);
+    }} 
+    className="text-sm hover:underline"
+    style={{ color: "rgba(167, 139, 250, 1)" }}
+  >
+    {isSignIn ? 'Create an account' : 'Already have an account?'}
+  </button>
+</div>
               </motion.div>
             )}
             
+            {/* Continue with stage 2 and 3 using the same styling approach */}
             {stage === 2 && (
               <motion.form
                 key="stage2"
@@ -314,18 +468,17 @@ const Auth: React.FC = () => {
                 exit="exit"
                 transition={{ duration: 0.3 }}
                 onSubmit={handleSubmit}
+                className="form"
               >
-                <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-bold mb-1">
+                <div className="input-group">
+                  <label htmlFor="password">
                     Enter your password *
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                      <FaLock />
-                    </span>
                     <input
                       type="password"
                       name="password"
+                      id="password"
                       value={formData.password}
                       onChange={handleInputChange}
                       onFocus={() => {
@@ -337,110 +490,150 @@ const Auth: React.FC = () => {
                           setCharacterState('idle');
                         }, 3000);
                       }}
-                      className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Your password"
-                      required
-                    />
-                  </div>
-                  {isSignIn && (
-                    <p className="text-right mt-1">
-                      <a 
-                        href="#" 
-                        className="text-sm text-blue-500 hover:underline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCharacterState('thinking');
-                          setAvatarMessage("I can help you reset your password!");
-                          setShowMessage(true);
-                          setTimeout(() => {
-                            setShowMessage(false);
-                            setCharacterState('idle');
-                          }, 3000);
-                        }}
-                      >
-                        Forgot password?
-                      </a>
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={goToPrevStage}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition-colors duration-300"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!formData.password}
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-300"
-                  >
-                    {isSignIn ? 'Sign In' : 'Sign Up'}
-                  </button>
-                </div>
-              </motion.form>
-            )}
-            
-            {stage === 3 && (
-              <motion.div
-                key="stage3"
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="text-center"
-              >
-                <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
-                  <svg 
-                    className="w-8 h-8 text-green-500" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth="2" 
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-2">
-                  {isSignIn ? 'Welcome back!' : 'Account created!'}
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  {isSignIn 
-                    ? 'You have successfully signed in to your account.' 
-                    : 'Your account has been created successfully.'}
-                </p>
-                <button
-                  onClick={resetForm}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-300"
-                >
-                  Continue
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          {isLoading && (
-            <motion.div 
-              className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="loader w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
+                     required
+                   />
+                 </div>
+                 {isSignIn && (
+                   <div className="forgot">
+                     <a 
+                       href="#" 
+                       onClick={(e) => {
+                         e.preventDefault();
+                         setCharacterState('thinking');
+                         setAvatarMessage("I can help you reset your password!");
+                         setShowMessage(true);
+                         setTimeout(() => {
+                           setShowMessage(false);
+                           setCharacterState('idle');
+                         }, 3000);
+                       }}
+                     >
+                       Forgot Password?
+                     </a>
+                   </div>
+                 )}
+               </div>
+               
+               <div style={{ display: 'flex', gap: '8px', padding: '5px'}}>
+               <button
+  type="button"
+  onClick={goToPrevStage}
+  style={{ 
+    flex: '1', 
+    backgroundColor: 'rgba(55, 65, 81, 1)', 
+    color: 'white',
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: 'none',
+    fontWeight: '600',
+    cursor: 'pointer',
+  }}
+>
+  Back
+</button>
+<button
+  type="submit"
+  disabled={!formData.password}
+  style={{ 
+    flex: '1', 
+    backgroundColor: 'rgba(55, 65, 81, 1)', 
+    color: 'white',
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: 'none',
+    fontWeight: '600',
+    cursor: 'pointer',
+  }}
+>
+                   {isSignIn ? 'Sign In' : 'Sign Up'}
+                 </button>
+               </div>
+             </motion.form>
+           )}
+           
+           {stage === 3 && (
+             <motion.div
+               key="stage3"
+               variants={formVariants}
+               initial="hidden"
+               animate="visible"
+               exit="exit"
+               transition={{ duration: 0.3 }}
+               className="form"
+               style={{ textAlign: 'center' }}
+             >
+               <div style={{ 
+                 width: '4rem', 
+                 height: '4rem', 
+                 backgroundColor: 'rgba(167, 139, 250, 0.2)', 
+                 borderRadius: '50%', 
+                 margin: '0 auto 1rem',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center'
+               }}>
+                 <svg 
+                   style={{ width: '2rem', height: '2rem', color: 'rgba(167, 139, 250, 1)' }}
+                   fill="none" 
+                   stroke="currentColor" 
+                   viewBox="0 0 24 24" 
+                   xmlns="http://www.w3.org/2000/svg"
+                 >
+                   <path 
+                     strokeLinecap="round" 
+                     strokeLinejoin="round" 
+                     strokeWidth="2" 
+                     d="M5 13l4 4L19 7"
+                   />
+                 </svg>
+               </div>
+               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                 {isSignIn ? 'Welcome back!' : 'Account created!'}
+               </h3>
+               <p style={{ color: 'rgba(156, 163, 175, 1)', marginBottom: '1.5rem' }}>
+                 {isSignIn 
+                   ? 'You have successfully signed in to your account.' 
+                   : 'Your account has been created successfully.'}
+               </p>
+               <button
+                 onClick={resetForm}
+                 className="sign"
+               >
+                 Continue
+               </button>
+             </motion.div>
+           )}
+         </AnimatePresence>
+         
+         {isLoading && (
+           <motion.div 
+             style={{
+               position: 'absolute',
+               inset: '0',
+               backgroundColor: 'rgba(17, 24, 39, 0.8)',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center'
+             }}
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+           >
+             <div style={{
+               width: '3rem',
+               height: '3rem',
+               borderRadius: '50%',
+               border: '4px solid rgba(167, 139, 250, 0.3)',
+               borderTopColor: 'rgba(167, 139, 250, 1)',
+               animation: 'spin 1s linear infinite'
+             }}></div>
+           </motion.div>
+         )}
+       </motion.div>
+     </div>
+   </div>
+ </StyledWrapper>
+);
+}
 export default Auth;
