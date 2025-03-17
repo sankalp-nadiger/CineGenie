@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaGoogle, FaEnvelope, FaUser, FaLock } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
 import styled from 'styled-components';
+import  Link  from 'next/link';
+import Loader  from '@/components/Loader';
+import { useRouter } from 'next/navigation';
 
 // Import Three.js components with dynamic import (no SSR)
 const ThreeCharacter = dynamic(() => import('@/components/ThreeCharacter'), {
@@ -53,7 +56,7 @@ const StyledWrapper = styled.div`
     margin-bottom: 4px;
   }
 
-  .input-group input {
+  .input-group input, .input-group textarea {
     width: 100%;
     border-radius: 0.375rem;
     border: 1px solid rgba(55, 65, 81, 1);
@@ -63,7 +66,7 @@ const StyledWrapper = styled.div`
     color: rgba(243, 244, 246, 1);
   }
 
-  .input-group input:focus {
+  .input-group input:focus, .input-group textarea:focus {
     border-color: rgba(167, 139, 250);
   }
 
@@ -143,10 +146,12 @@ const StyledWrapper = styled.div`
     min-height: 100vh;
   }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  .char-count {
+    font-size: 0.75rem;
+    color: rgba(156, 163, 175, 1);
+    text-align: right;
+    margin-top: 0.25rem;
+  }
 `;
 
 // Speech Bubble Component
@@ -169,6 +174,7 @@ const SpeechBubble: React.FC<{message: string, show: boolean}> = ({ message, sho
 
 // Main Auth component
 const Auth: React.FC = () => {
+  const router = useRouter();
   const [isSignIn, setIsSignIn] = useState(false);
   const [stage, setStage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -179,6 +185,7 @@ const Auth: React.FC = () => {
     username: '',
     email: '',
     password: '',
+    bio: ''
   });
 
   // Character interaction messages based on form state
@@ -200,8 +207,17 @@ const Auth: React.FC = () => {
         setAvatarMessage("Now for your password. Keep it secret, keep it safe!");
         break;
       case 3:
+        if (isSignIn) {
+          setCharacterState('celebrating');
+          setAvatarMessage("You're in! Great to have you back.");
+        } else {
+          setCharacterState('celebrating');
+          setAvatarMessage("Awesome! Your account is ready. Tell us about yourself!");
+        }
+        break;
+      case 4:
         setCharacterState('celebrating');
-        setAvatarMessage(isSignIn ? "You're in! Great to have you back." : "Awesome! Your account is ready.");
+        setAvatarMessage("Perfect! Your profile is all set up.");
         break;
       default:
         setCharacterState('idle');
@@ -216,7 +232,7 @@ const Auth: React.FC = () => {
     return () => clearTimeout(timer);
   }, [stage, isLoading, isSignIn]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -275,7 +291,27 @@ const Auth: React.FC = () => {
     setTimeout(() => {
       setIsLoading(false);
       setCharacterState('celebrating');
-      setStage(3);
+      if (isSignIn) {
+        // Redirect to dashboard for sign in
+        router.push('/MainPage');
+      } else {
+        // For signup, go to bio form
+        setStage(3);
+      }
+    }, 2000);
+  };
+
+  const handleBioSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setCharacterState('processing');
+    setAvatarMessage("Saving your profile...");
+    setShowMessage(true);
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      setCharacterState('celebrating');
+      setStage(4);
     }, 2000);
   };
 
@@ -287,9 +323,24 @@ const Auth: React.FC = () => {
     
     setTimeout(() => {
       setIsLoading(false);
-      setCharacterState('celebrating');
-      setStage(3);
+      if (isSignIn) {
+        router.push('/MainPage');
+      } else {
+        setCharacterState('celebrating');
+        setStage(3);
+      }
     }, 2000);
+  };
+
+  const goToDashboard = () => {
+    setIsLoading(true);
+    setCharacterState('waving');
+    setAvatarMessage("Taking you to your dashboard!");
+    setShowMessage(true);
+    
+    setTimeout(() => {
+      router.push('/MainPage');
+    }, 1500);
   };
 
   const resetForm = () => {
@@ -298,6 +349,7 @@ const Auth: React.FC = () => {
       username: '',
       email: '',
       password: '',
+      bio: ''
     });
     setCharacterState('waving');
     setAvatarMessage("Let's start again!");
@@ -308,332 +360,403 @@ const Auth: React.FC = () => {
     }, 3000);
   };
 
-  // Replace the return statement with this:
-return (
-  <StyledWrapper>
-    <div className="flex items-center justify-center min-h-screen bg-dark p-4">
-      <div className="relative w-full max-w-md">
-        <div className="absolute -left-32 -bottom-4 w-32 h-64 cursor-pointer" onClick={interactWithCharacter}>
-          <ThreeCharacter state={characterState} />
-          <AnimatePresence>
-            {showMessage && <SpeechBubble message={avatarMessage} show={showMessage} />}
-          </AnimatePresence>
-        </div>
-        
-        <motion.div 
-          className="form-container ml-32 md:ml-0"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-         
-          <p className="title">
-            {isSignIn ? 'Login' : 'Signup now'}
-          </p>
+  return (
+    <StyledWrapper>
+      <div className="flex items-center justify-center min-h-screen bg-dark p-4">
+        <div className="relative w-full max-w-md">
+          <div className="absolute -left-32 -bottom-4 w-32 h-64 cursor-pointer" onClick={interactWithCharacter}>
+            <ThreeCharacter state={characterState} />
+            <AnimatePresence>
+              {showMessage && <SpeechBubble message={avatarMessage} show={showMessage} />}
+            </AnimatePresence>
+          </div>
           
-          <AnimatePresence mode="wait">
-            {stage === 1 && (
-              <motion.div
-                key="stage1"
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="form"
-              >
-                {!isSignIn && (
+          <motion.div 
+            className="form-container ml-32 md:ml-0"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+          
+            <p className="title">
+              {isSignIn ? 'Login' : 'Signup now'}
+            </p>
+            
+            <AnimatePresence mode="wait">
+              {stage === 1 && (
+                <motion.div
+                  key="stage1"
+                  variants={formVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="form"
+                >
+                  {!isSignIn && (
+                    <div className="input-group">
+                      <label htmlFor="username">
+                        What's your username? *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="username"
+                          id="username"
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          onFocus={() => {
+                            setCharacterState('pointing');
+                            setAvatarMessage("Choose a username you'll remember!");
+                            setShowMessage(true);
+                            setTimeout(() => {
+                              setShowMessage(false);
+                              setCharacterState('idle');
+                            }, 3000);
+                          }}
+                          placeholder="Username"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="input-group">
-                    <label htmlFor="username">
-                      What's your username? *
+                    <label htmlFor="email">
+                      Enter your email address *
                     </label>
                     <div className="relative">
                       <input
-                        type="text"
-                        name="username"
-                        id="username"
-                        value={formData.username}
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={formData.email}
                         onChange={handleInputChange}
                         onFocus={() => {
                           setCharacterState('pointing');
-                          setAvatarMessage("Choose a username you'll remember!");
+                          setAvatarMessage("Make sure to use a valid email!");
                           setShowMessage(true);
                           setTimeout(() => {
                             setShowMessage(false);
                             setCharacterState('idle');
                           }, 3000);
                         }}
-                        placeholder="Username"
+                        placeholder="you@example.com"
                         required
                       />
                     </div>
                   </div>
-                )}
-                
-                <div className="input-group">
-                  <label htmlFor="email">
-                    Enter your email address *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      onFocus={() => {
-                        setCharacterState('pointing');
-                        setAvatarMessage("Make sure to use a valid email!");
-                        setShowMessage(true);
-                        setTimeout(() => {
-                          setShowMessage(false);
-                          setCharacterState('idle');
-                        }, 3000);
-                      }}
-                      placeholder="you@example.com"
-                      required
-                    />
+                  
+                  <button
+                    onClick={goToNextStage}
+                    disabled={!formData.email || (!isSignIn && !formData.username)}
+                    className="sign"
+                  >
+                    Next
+                  </button>
+                  
+                  <div className="social-message">
+                    <div className="line"></div>
+                    <p className="message">Or continue with</p>
+                    <div className="line"></div>
                   </div>
-                </div>
-                
-                <button
-                  onClick={goToNextStage}
-                  disabled={!formData.email || (!isSignIn && !formData.username)}
-                  className="sign"
-                >
-                  Next
-                </button>
-                
-                <div className="social-message">
-                  <div className="line"></div>
-                  <p className="message">Or continue with</p>
-                  <div className="line"></div>
-                </div>
-                
-                <div className="social-icons">
-                  <button
-                    onClick={handleGoogleSignIn}
-                    aria-label="Log in with Google"
-                    className="icon"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
-                      <path d="M16.318 13.714v5.484h9.078c-0.37 2.354-2.745 6.901-9.078 6.901-5.458 0-9.917-4.521-9.917-10.099s4.458-10.099 9.917-10.099c3.109 0 5.193 1.318 6.38 2.464l4.339-4.182c-2.786-2.599-6.396-4.182-10.719-4.182-8.844 0-16 7.151-16 16s7.156 16 16 16c9.234 0 15.365-6.49 15.365-15.635 0-1.052-0.115-1.854-0.255-2.651z" />
-                    </svg>
-                  </button>
-                  <button
-                    aria-label="Log in with Twitter"
-                    className="icon"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
-                      <path d="M31.937 6.093c-1.177 0.516-2.437 0.871-3.765 1.032 1.355-0.813 2.391-2.099 2.885-3.631-1.271 0.74-2.677 1.276-4.172 1.579-1.192-1.276-2.896-2.079-4.787-2.079-3.625 0-6.563 2.937-6.563 6.557 0 0.521 0.063 1.021 0.172 1.495-5.453-0.255-10.287-2.875-13.52-6.833-0.568 0.964-0.891 2.084-0.891 3.303 0 2.281 1.161 4.281 2.916 5.457-1.073-0.031-2.083-0.328-2.968-0.817v0.079c0 3.181 2.26 5.833 5.26 6.437-0.547 0.145-1.131 0.229-1.724 0.229-0.421 0-0.823-0.041-1.224-0.115 0.844 2.604 3.26 4.5 6.14 4.557-2.239 1.755-5.077 2.801-8.135 2.801-0.521 0-1.041-0.025-1.563-0.088 2.917 1.86 6.36 2.948 10.079 2.948 12.067 0 18.661-9.995 18.661-18.651 0-0.276 0-0.557-0.021-0.839 1.287-0.917 2.401-2.079 3.281-3.396z" />
-                    </svg>
-                  </button>
-                  <button
-                    aria-label="Log in with GitHub"
-                    className="icon"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
-                      <path d="M16 0.396c-8.839 0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183 0.803 0.151 1.093-0.344 1.093-0.772 0-0.38-0.009-1.385-0.015-2.719-4.453 0.964-5.391-2.151-5.391-2.151-0.729-1.844-1.781-2.339-1.781-2.339-1.448-0.989 0.115-0.968 0.115-0.968 1.604 0.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328 0.14-1.031 0.557-1.74 1.011-2.135-3.552-0.401-7.287-1.776-7.287-7.907 0-1.751 0.62-3.177 1.645-4.297-0.177-0.401-0.719-2.031 0.141-4.235 0 0 1.339-0.427 4.4 1.641 1.281-0.355 2.641-0.532 4-0.541 1.36 0.009 2.719 0.187 4 0.541 3.043-2.068 4.381-1.641 4.381-1.641 0.859 2.204 0.317 3.833 0.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297 0 6.145-3.74 7.5-7.296 7.891 0.556 0.479 1.077 1.464 1.077 2.959 0 2.14-0.020 3.864-0.020 4.385 0 0.416 0.28 0.916 1.104 0.755 6.4-2.093 10.979-8.093 10.979-15.156 0-8.833-7.161-16-16-16z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="text-center mt-4">
-  <button 
-    onClick={() => {
-      setIsSignIn(!isSignIn);
-      setCharacterState('waving');
-      setAvatarMessage(isSignIn ? "Let's create a new account!" : "Welcome back!");
-      setShowMessage(true);
-      setTimeout(() => {
-        setShowMessage(false);
-        setCharacterState('idle');
-      }, 3000);
-    }} 
-    className="text-sm hover:underline"
-    style={{ color: "rgba(167, 139, 250, 1)" }}
-  >
-    {isSignIn ? 'Create an account' : 'Already have an account?'}
-  </button>
-</div>
-              </motion.div>
-            )}
-            
-            {/* Continue with stage 2 and 3 using the same styling approach */}
-            {stage === 2 && (
-              <motion.form
-                key="stage2"
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                onSubmit={handleSubmit}
-                className="form"
-              >
-                <div className="input-group">
-                  <label htmlFor="password">
-                    Enter your password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      name="password"
-                      id="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      onFocus={() => {
-                        setCharacterState('shielding');
-                        setAvatarMessage("Make sure to use a strong password!");
+                  
+                  <div className="social-icons">
+                    <button
+                      onClick={handleGoogleSignIn}
+                      aria-label="Log in with Google"
+                      className="icon"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+  <path d="M16.318 13.714v5.484h9.078c-0.37 2.354-2.745 6.901-9.078 6.901-5.458 0-9.917-4.521-9.917-10.099s4.458-10.099 9.917-10.099c3.109 0 5.193 1.318 6.38 2.464l4.339-4.182c-2.786-2.599-6.396-4.182-10.719-4.182-8.844 0-16 7.151-16 16s7.156 16 16 16c9.234 0 15.365-6.49 15.365-15.635 0-1.052-0.115-1.854-0.255-2.651z" />
+</svg>
+                    </button>
+                    <button
+                      aria-label="Log in with Twitter"
+                      className="icon"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+                        <path d="M31.937 6.093c-1.177 0.516-2.437 0.871-3.765 1.032 1.355-0.813 2.391-2.099 2.885-3.631-1.271 0.74-2.677 1.276-4.172 1.579-1.192-1.276-2.896-2.079-4.787-2.079-3.625 0-6.563 2.937-6.563 6.557 0 0.521 0.063 1.021 0.172 1.495-5.453-0.255-10.287-2.875-13.52-6.833-0.568 0.964-0.891 2.084-0.891 3.303 0 2.281 1.161 4.281 2.916 5.457-1.073-0.031-2.083-0.328-2.968-0.817v0.079c0 3.181 2.26 5.833 5.26 6.437-0.547 0.145-1.131 0.229-1.724 0.229-0.421 0-0.823-0.041-1.224-0.115 0.844 2.604 3.26 4.5 6.14 4.557-2.239 1.755-5.077 2.801-8.135 2.801-0.521 0-1.041-0.025-1.563-0.088 2.917 1.86 6.36 2.948 10.079 2.948 12.067 0 18.661-9.995 18.661-18.651 0-0.276 0-0.557-0.021-0.839 1.287-0.917 2.401-2.079 3.281-3.396z" />
+                      </svg>
+                    </button>
+                    <button
+                      aria-label="Log in with GitHub"
+                      className="icon"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-5 h-5 fill-current">
+                        <path d="M16 0.396c-8.839 0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183 0.803 0.151 1.093-0.344 1.093-0.772 0-0.38-0.009-1.385-0.015-2.719-4.453 0.964-5.391-2.151-5.391-2.151-0.729-1.844-1.781-2.339-1.781-2.339-1.448-0.989 0.115-0.968 0.115-0.968 1.604 0.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328 0.14-1.031 0.557-1.74 1.011-2.135-3.552-0.401-7.287-1.776-7.287-7.907 0-1.751 0.62-3.177 1.645-4.297-0.177-0.401-0.719-2.031 0.141-4.235 0 0 1.339-0.427 4.4 1.641 1.281-0.355 2.641-0.532 4-0.541 1.36 0.009 2.719 0.187 4 0.541 3.043-2.068 4.381-1.641 4.381-1.641 0.859 2.204 0.317 3.833 0.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297 0 6.145-3.74 7.5-7.296 7.891 0.556 0.479 1.077 1.464 1.077 2.959 0 2.14-0.020 3.864-0.020 4.385 0 0.416 0.28 0.916 1.104 0.755 6.4-2.093 10.979-8.093 10.979-15.156 0-8.833-7.161-16-16-16z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="text-center mt-4">
+                    <button 
+                      onClick={() => {
+                        setIsSignIn(!isSignIn);
+                        setCharacterState('waving');
+                        setAvatarMessage(isSignIn ? "Let's create a new account!" : "Welcome back!");
                         setShowMessage(true);
                         setTimeout(() => {
                           setShowMessage(false);
                           setCharacterState('idle');
                         }, 3000);
-                      }}
-                      placeholder="Your password"
-                     required
-                   />
-                 </div>
-                 {isSignIn && (
-                   <div className="forgot">
-                     <a 
-                       href="#" 
-                       onClick={(e) => {
-                         e.preventDefault();
-                         setCharacterState('thinking');
-                         setAvatarMessage("I can help you reset your password!");
-                         setShowMessage(true);
-                         setTimeout(() => {
-                           setShowMessage(false);
-                           setCharacterState('idle');
-                         }, 3000);
-                       }}
-                     >
-                       Forgot Password?
-                     </a>
+                      }} 
+                      className="text-sm hover:underline"
+                      style={{ color: "rgba(167, 139, 250, 1)" }}
+                    >
+                      {isSignIn ? 'Create an account' : 'Already have an account?'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+              
+              {stage === 2 && (
+                <motion.form
+                  key="stage2"
+                  variants={formVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleSubmit}
+                  className="form"
+                >
+                  <div className="input-group">
+                    <label htmlFor="password">
+                      Enter your password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        onFocus={() => {
+                          setCharacterState('shielding');
+                          setAvatarMessage("Make sure to use a strong password!");
+                          setShowMessage(true);
+                          setTimeout(() => {
+                            setShowMessage(false);
+                            setCharacterState('idle');
+                          }, 3000);
+                        }}
+                        placeholder="Your password"
+                       required
+                     />
                    </div>
-                 )}
-               </div>
-               
-               <div style={{ display: 'flex', gap: '8px', padding: '5px'}}>
-               <button
-  type="button"
-  onClick={goToPrevStage}
-  style={{ 
-    flex: '1', 
-    backgroundColor: 'rgba(55, 65, 81, 1)', 
-    color: 'white',
-    padding: '0.75rem',
-    borderRadius: '0.375rem',
-    border: 'none',
-    fontWeight: '600',
-    cursor: 'pointer',
-  }}
->
-  Back
-</button>
-<button
-  type="submit"
-  disabled={!formData.password}
-  style={{ 
-    flex: '1', 
-    backgroundColor: 'rgba(55, 65, 81, 1)', 
-    color: 'white',
-    padding: '0.75rem',
-    borderRadius: '0.375rem',
-    border: 'none',
-    fontWeight: '600',
-    cursor: 'pointer',
-  }}
->
-                   {isSignIn ? 'Sign In' : 'Sign Up'}
+                   {isSignIn && (
+                     <div className="forgot">
+                       <a 
+                         href="#" 
+                         onClick={(e) => {
+                           e.preventDefault();
+                           setCharacterState('thinking');
+                           setAvatarMessage("I can help you reset your password!");
+                           setShowMessage(true);
+                           setTimeout(() => {
+                             setShowMessage(false);
+                             setCharacterState('idle');
+                           }, 3000);
+                         }}
+                       >
+                         Forgot Password?
+                       </a>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '8px', padding: '5px'}}>
+                   <button
+                     type="button"
+                     onClick={goToPrevStage}
+                     style={{ 
+                       flex: '1', 
+                       backgroundColor: 'rgba(55, 65, 81, 1)', 
+                       color: 'white',
+                       padding: '0.75rem',
+                       borderRadius: '0.375rem',
+                       border: 'none',
+                       fontWeight: '600',
+                       cursor: 'pointer',
+                     }}
+                   >
+                     Back
+                   </button>
+                   <button
+                     type="submit"
+                     disabled={!formData.password}
+                     style={{ 
+                       flex: '1', 
+                       backgroundColor: formData.password ? 'rgba(167, 139, 250, 1)' : 'rgba(107, 114, 128, 0.5)', 
+                       color: 'white',
+                       padding: '0.75rem',
+                       borderRadius: '0.375rem',
+                       border: 'none',
+                       fontWeight: '600',
+                       cursor: formData.password ? 'pointer' : 'not-allowed',
+                     }}
+                   >
+                     {isSignIn ? 'Sign In' : 'Sign Up'}
+                   </button>
+                 </div>
+               </motion.form>
+             )}
+
+             {/* Bio form - New stage for signup users */}
+             {stage === 3 && !isSignIn && (
+               <motion.form
+                 key="stage3-bio"
+                 variants={formVariants}
+                 initial="hidden"
+                 animate="visible"
+                 exit="exit"
+                 transition={{ duration: 0.3 }}
+                 onSubmit={handleBioSubmit}
+                 className="form"
+               >
+                 <div className="input-group">
+                   <label htmlFor="bio">
+                     Tell us about yourself
+                   </label>
+                   <textarea
+                     name="bio"
+                     id="bio"
+                     rows={4}
+                     value={formData.bio}
+                     onChange={handleInputChange}
+                     onFocus={() => {
+                       setCharacterState('thinking');
+                       setAvatarMessage("Share something interesting about yourself!");
+                       setShowMessage(true);
+                       setTimeout(() => {
+                         setShowMessage(false);
+                         setCharacterState('idle');
+                       }, 3000);
+                     }}
+                     placeholder="Write a short bio for your profile..."
+                     maxLength={200}
+                     className="resize-none"
+                   />
+                   <div className="char-count">
+                     {formData.bio.length}/200
+                   </div>
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '8px', padding: '5px'}}>
+                   <button
+                     type="button"
+                     onClick={goToPrevStage}
+                     style={{ 
+                       flex: '1', 
+                       backgroundColor: 'rgba(55, 65, 81, 1)', 
+                       color: 'white',
+                       padding: '0.75rem',
+                       borderRadius: '0.375rem',
+                       border: 'none',
+                       fontWeight: '600',
+                       cursor: 'pointer',
+                     }}
+                   >
+                     Back
+                   </button>
+                   <button
+                     type="submit"
+                     style={{ 
+                       flex: '1', 
+                       backgroundColor: 'rgba(167, 139, 250, 1)', 
+                       color: 'white',
+                       padding: '0.75rem',
+                       borderRadius: '0.375rem',
+                       border: 'none',
+                       fontWeight: '600',
+                       cursor: 'pointer',
+                     }}
+                   >
+                     Complete Profile
+                   </button>
+                 </div>
+               </motion.form>
+             )}
+             
+             {/* Success screen */}
+             {((stage === 3 && isSignIn) || stage === 4) && (
+               <motion.div
+                 key="success"
+                 variants={formVariants}
+                 initial="hidden"
+                 animate="visible"
+                 exit="exit"
+                 transition={{ duration: 0.3 }}
+                 className="form"
+                 style={{ textAlign: 'center' }}
+               >
+                 <div style={{ 
+                   width: '4rem', 
+                   height: '4rem', 
+                   backgroundColor: 'rgba(167, 139, 250, 0.2)', 
+                   borderRadius: '50%', 
+                   margin: '0 auto 1rem',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center'
+                 }}>
+                   <svg 
+                     style={{ width: '2rem', height: '2rem', color: 'rgba(167, 139, 250, 1)' }}
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24" 
+                     xmlns="http://www.w3.org/2000/svg"
+                   >
+                     <path 
+                       strokeLinecap="round" 
+                       strokeLinejoin="round" 
+                       strokeWidth="2" 
+                       d="M5 13l4 4L19 7"
+                     />
+                   </svg>
+                 </div>
+                 <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                   {isSignIn ? 'Welcome back!' : 'Profile complete!'}
+                 </h3>
+                 <p style={{ color: 'rgba(156, 163, 175, 1)', marginBottom: '1.5rem' }}>
+                   {isSignIn 
+                     ? 'You have successfully signed in to your account.' 
+                     : 'Your profile has been created successfully. Ready to explore?'}
+                 </p>
+                 <button
+                   onClick={goToDashboard}
+                   className="sign"
+                 >
+                   Go to Dashboard
                  </button>
-               </div>
-             </motion.form>
-           )}
+               </motion.div>
+             )}
+           </AnimatePresence>
            
-           {stage === 3 && (
-             <motion.div
-               key="stage3"
-               variants={formVariants}
-               initial="hidden"
-               animate="visible"
-               exit="exit"
-               transition={{ duration: 0.3 }}
-               className="form"
-               style={{ textAlign: 'center' }}
-             >
-               <div style={{ 
-                 width: '4rem', 
-                 height: '4rem', 
-                 backgroundColor: 'rgba(167, 139, 250, 0.2)', 
-                 borderRadius: '50%', 
-                 margin: '0 auto 1rem',
+           {isLoading && (
+             <motion.div 
+               style={{
+                 position: 'absolute',
+                 inset: '0',
+                 backgroundColor: 'rgba(17, 24, 39, 0.8)',
                  display: 'flex',
                  alignItems: 'center',
-                 justifyContent: 'center'
-               }}>
-                 <svg 
-                   style={{ width: '2rem', height: '2rem', color: 'rgba(167, 139, 250, 1)' }}
-                   fill="none" 
-                   stroke="currentColor" 
-                   viewBox="0 0 24 24" 
-                   xmlns="http://www.w3.org/2000/svg"
-                 >
-                   <path 
-                     strokeLinecap="round" 
-                     strokeLinejoin="round" 
-                     strokeWidth="2" 
-                     d="M5 13l4 4L19 7"
-                   />
-                 </svg>
-               </div>
-               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                 {isSignIn ? 'Welcome back!' : 'Account created!'}
-               </h3>
-               <p style={{ color: 'rgba(156, 163, 175, 1)', marginBottom: '1.5rem' }}>
-                 {isSignIn 
-                   ? 'You have successfully signed in to your account.' 
-                   : 'Your account has been created successfully.'}
-               </p>
-               <button
-                 onClick={resetForm}
-                 className="sign"
-               >
-                 Continue
-               </button>
+                 justifyContent: 'center',
+                 borderRadius: '0.75rem',
+                 zIndex: 50
+               }}
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+             >
+               <Loader />
              </motion.div>
            )}
-         </AnimatePresence>
-         
-         {isLoading && (
-           <motion.div 
-             style={{
-               position: 'absolute',
-               inset: '0',
-               backgroundColor: 'rgba(17, 24, 39, 0.8)',
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center'
-             }}
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-           >
-             <div style={{
-               width: '3rem',
-               height: '3rem',
-               borderRadius: '50%',
-               border: '4px solid rgba(167, 139, 250, 0.3)',
-               borderTopColor: 'rgba(167, 139, 250, 1)',
-               animation: 'spin 1s linear infinite'
-             }}></div>
-           </motion.div>
-         )}
-       </motion.div>
+         </motion.div>
+       </div>
      </div>
-   </div>
- </StyledWrapper>
-);
+   </StyledWrapper>
+  );
 }
+
 export default Auth;

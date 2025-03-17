@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import * as THREE from 'three';
 import Link from "next/link";
+import Loader from '@/components/Loader';
 
 export default function Home() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -312,12 +314,21 @@ export default function Home() {
     </div>
     
     <div className="central-content">
-      <h1 className="title">CineGenie</h1>
-      <p className="subtitle">Your magical companion for films & discussions</p>
-      <Link href="/Auth">
-        <button className="auth-button">Enter the Realm</button>
-      </Link>
-    </div>
+  <h1 className="title">CineGenie</h1>
+  <p className="subtitle">Your magical companion for films & discussions</p>
+  {navigating ? (
+    <Loader />
+  ) : (
+    <Link href="/Auth">
+      <button 
+        className="auth-button" 
+        onClick={() => setNavigating(true)}
+      >
+        Enter the Realm
+      </button>
+    </Link>
+  )}
+</div>
     
     <div className="camera right-camera">
       <div className="camera-body"></div>
@@ -361,11 +372,15 @@ export default function Home() {
   }
 
   .central-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
   text-align: center;
-  z-index: 12;
-  padding: 0 20px;
-  transform: translateY(65px);
+  margin-top: 115px; 
 }
+
   .title {
     font-family: 'Audiowide', cursive;
     font-size: 5rem;
@@ -401,6 +416,7 @@ export default function Home() {
     box-shadow: 0 4px 15px rgba(33, 93, 157, 0.4);
     letter-spacing: 1px;
     text-transform: uppercase;
+  margin-top: 20px;
   }
 
   .auth-button:hover {
