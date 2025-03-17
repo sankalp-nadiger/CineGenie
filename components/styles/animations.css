@@ -1,39 +1,48 @@
 @keyframes wave {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-15deg); }
-    75% { transform: rotate(15deg); }
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  @keyframes thinking {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(10deg); }
-  }
-  @keyframes celebrate {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-20px) scale(1.1); }
-  }
-  @keyframes subtle-sway {
-    0%, 100% { transform: rotate(-1deg); }
-    50% { transform: rotate(1deg); }
-  }
-  .animate-wave {
-    animation: wave 2s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
-  .animate-bounce {
-    animation: bounce 1s ease-in-out infinite;
-  }
-  .animate-thinking {
-    animation: thinking 2s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
-  .animate-celebrate {
-    animation: celebrate 1s ease-in-out infinite;
-  }
-  .animate-subtle-sway {
-    animation: subtle-sway 3s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes thinking {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes celebrate {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.1); }
+}
+
+@keyframes subtle-sway {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.animate-wave {
+  animation: wave 2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.animate-thinking {
+  animation: thinking 2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-celebrate {
+  animation: celebrate 1s ease-in-out infinite;
+}
+
+.animate-subtle-sway {
+  animation: subtle-sway 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}

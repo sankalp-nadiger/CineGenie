@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Star, PlayCircle, Tv, BarChart3, ChevronRight, Clock, MessageCircle } from 'lucide-react';
+import { Layout } from '@/components/Layout';
 
-// Types
 interface MediaItem {
   id: number;
   title: string;
@@ -145,8 +145,6 @@ const TrendingPage = () => {
           }
         ];
         
-        // Filter and sort based on activeTab and timeRange
-        // In a real app, these parameters would be sent to your backend API
         let filteredItems = [...mockTrendingItems];
         
         if (activeTab !== 'all') {
@@ -175,7 +173,6 @@ const TrendingPage = () => {
     return trendingItems.filter(item => item.type === 'series');
   };
 
-  // Variants for animations
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -203,16 +200,18 @@ const TrendingPage = () => {
   };
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header with futuristic design */}
-      <header className="py-6 px-4 sm:px-6 lg:px-8 backdrop-blur-lg bg-black/50 border-b border-indigo-500/30" style={{background: "linear-gradient(180deg, rgba(20, 20, 40, 0.9) 0%, rgba(10, 10, 30, 0.8) 100%)"}}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 flex items-center">
+    <header 
+  className="py-3 px-2 sm:px-4 lg:px-6 backdrop-blur-lg bg-black/50 border-b border-indigo-500/30" 
+  style={{ background: "linear-gradient(180deg, rgba(20, 20, 40, 0.9) 0%, rgba(10, 10, 30, 0.8) 100%)" }}
+>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 flex items-center">
             <TrendingUp className="h-8 w-8 mr-2 text-indigo-400" />
             Trending Now
           </h1>
           
-          {/* Time range selector with neon effect */}
           <div className="mt-4 md:mt-0 flex space-x-1 p-1 rounded-full bg-gray-800/50 backdrop-blur-md border border-indigo-500/20">
             {['day', 'week', 'month'].map((range) => (
               <button
@@ -272,7 +271,6 @@ const TrendingPage = () => {
           </div>
         ) : (
           <>
-            {/* Conditional rendering based on active tab */}
             {(activeTab === 'all' || activeTab === 'movies') && getTrendingMovies().length > 0 && (
               <div className="mb-12">
                 <div className="flex items-center justify-between mb-6">
@@ -443,6 +441,7 @@ const TrendingPage = () => {
        )}
      </main>
    </div>
+   </Layout>
  );
 };
 

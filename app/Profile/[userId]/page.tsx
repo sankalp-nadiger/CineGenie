@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { Film, Star, Award, Calendar, Clock, User, Heart } from 'lucide-react';
 import { Layout } from '@/components/Layout';
 import { ProfileHeader } from '@/components/EditProfile'
+import { useParams } from 'next/navigation';
 interface Movie {
   id: number;
   title: string;
@@ -67,8 +68,17 @@ const UserProfile: NextPage = () => {
     { type: "list", name: "Best Cyberpunk Films", time: "2 days ago" },
     { type: "followed", user: "FilmOracle", time: "3 days ago" },
   ];
-
-  const [isCurrentUser] = useState(true);
+  
+  const [isCurrentUser, setIsCurrentUser] = useState(true);
+  const params = useParams();
+  const userId = params.userId;
+  useEffect(() => {
+    if (userId) {
+      setIsCurrentUser(false);
+    } else {
+      setIsCurrentUser(true);
+    }
+  }, [userId]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   

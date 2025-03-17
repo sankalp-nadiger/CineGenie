@@ -1,9 +1,9 @@
-// app/discover/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Search, Film, Star, TrendingUp, Clock, Filter } from 'lucide-react';
+import { Layout } from '@/components/Layout';
 
 // Types
 interface Movie {
@@ -31,11 +31,9 @@ const DiscoverPage = () => {
   const [debouncedSearch] = useDebounce(searchTerm, 500);
 
   useEffect(() => {
-    // Fetch genres
+    // Fetch genres (using mock data)
     const fetchGenres = async () => {
       try {
-        // In a real app, you'd fetch from an API
-        // For this example, we'll use mock data
         const mockGenres = [
           { id: 28, name: 'Action' },
           { id: 12, name: 'Adventure' },
@@ -54,22 +52,17 @@ const DiscoverPage = () => {
         console.error('Error fetching genres:', error);
       }
     };
-    
+
     fetchGenres();
   }, []);
 
   useEffect(() => {
-    // Fetch movies based on search, filters, and sort
+    // Fetch movies (using mock data)
     const fetchMovies = async () => {
       setLoading(true);
       try {
-        // In a real app, you'd call your ML recommendation API or a movie database API
-        // For this example, we'll use mock data
-        
-        // Simulating API delay
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Mock movie data (in a real app, this would come from your API)
         const mockMovies: Movie[] = [
           {
             id: 1,
@@ -145,7 +138,6 @@ const DiscoverPage = () => {
           }
         ];
         
-        // Apply filters (simplified for this example)
         let filteredMovies = [...mockMovies];
         
         if (debouncedSearch) {
@@ -163,9 +155,8 @@ const DiscoverPage = () => {
           );
         }
         
-        // Sort movies (simplified)
         if (sortBy === 'popularity.desc') {
-          // No change needed, already sorted by popularity in our mock
+          // No extra sorting logic needed in this example
         } else if (sortBy === 'vote_average.desc') {
           filteredMovies.sort((a, b) => b.voteAverage - a.voteAverage);
         } else if (sortBy === 'release_date.desc') {
@@ -184,7 +175,7 @@ const DiscoverPage = () => {
   }, [debouncedSearch, selectedGenres, sortBy, genres]);
 
   const handleGenreToggle = (genreId: number) => {
-    setSelectedGenres(prev => 
+    setSelectedGenres(prev =>
       prev.includes(genreId)
         ? prev.filter(id => id !== genreId)
         : [...prev, genreId]
@@ -192,43 +183,42 @@ const DiscoverPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Discover Movies</h1>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Search and Filter Section */}
-        <div className="mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Search for movies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <Layout>
+      <div className="min-h-screen bg-gray-900">
+        <header className="bg-gray-800 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 className="text-2xl font-bold text-white">Discover Movies</h1>
           </div>
+        </header>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4">
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <select
-                className="block appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-3 pr-10 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="popularity.desc">Most Popular</option>
-                <option value="vote_average.desc">Highest Rated</option>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Search and Filter Section */}
+          <div className="mb-8 space-y-4">
+            {/* Search Bar */}
+            {/* <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Search for movies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div> */}
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4">
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <select
+                  className="block appearance-none bg-gray-800 border border-gray-700 rounded-lg pl-3 pr-10 py-2 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="popularity.desc">Most Popular</option>
+                  <option value="vote_average.desc">Highest Rated</option>
                 <option value="release_date.desc">Recently Released</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
@@ -324,6 +314,7 @@ const DiscoverPage = () => {
         )}
       </main>
     </div>
+    </Layout>
   );
 };
 

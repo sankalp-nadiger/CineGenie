@@ -94,19 +94,19 @@ const WatchlistPage: React.FC = () => {
         <div className="mb-6">
           <div className="flex space-x-4 border-b">
             <button
-              className={`py-2 px-4 ${activeFilter === 'all' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+              className={`py-2 px-4 ${activeFilter === 'all' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-white-600'}`}
               onClick={() => setActiveFilter('all')}
             >
               All Movies
             </button>
             <button
-              className={`py-2 px-4 ${activeFilter === 'unwatched' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+              className={`py-2 px-4 ${activeFilter === 'unwatched' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-white-600'}`}
               onClick={() => setActiveFilter('unwatched')}
             >
               To Watch
             </button>
             <button
-              className={`py-2 px-4 ${activeFilter === 'watched' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+              className={`py-2 px-4 ${activeFilter === 'watched' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-white-600'}`}
               onClick={() => setActiveFilter('watched')}
             >
               Watched

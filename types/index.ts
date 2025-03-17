@@ -36,6 +36,7 @@ export interface DashboardStats {
 export interface ChatGroup {
   id: string;
   name: string;
+  members: string[]
   imageUrl: string;
   lastMessage: string;
   unreadCount: number;
