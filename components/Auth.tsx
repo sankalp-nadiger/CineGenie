@@ -323,7 +323,7 @@ const ForgotPasswordModal: React.FC<{
 // Main Auth component
 const Auth: React.FC = () => {
   const router = useRouter();
-  const [isSignIn, setIsSignIn] = useState(false);
+  const [isSignIn, setIsSignIn] = useState(true);
   const [stage, setStage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [characterState, setCharacterState] = useState('idle');
