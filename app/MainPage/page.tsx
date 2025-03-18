@@ -1,16 +1,21 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import { Layout } from '@/components/Layout';
 import { ChatList } from '@/components/ChatList';
 import { ChatRoom } from '@/components/ChatRoom';
 import ChatContainer from '@/components/ChatContainer'
 import type { ChatGroup } from '@/types';
+import { useRouter } from 'next/navigation';
 import SpinningLogo from '@/components/SpinningLogo';
 import Button from '@/components/Button';
+import Loader from '@/components/Loader'
 
 const MainPage: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<ChatGroup | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [groupImage, setGroupImage] = useState(null);
+  const [modalType, setModalType] = useState<"none" | "join" | "create">("none");
+  const router = useRouter();
   // Chat groups state
   const [chatGroups, setChatGroups] = useState<ChatGroup[]>([
     { 
@@ -87,10 +92,67 @@ const MainPage: React.FC = () => {
     );
   };
 
-  const [modalType, setModalType] = useState<"none" | "join" | "create">("none");
+  const handleSubmit = async (type) => {
+    try {
+      if (type === 'join') {
+        // Get form data for joining a box
+        const form = document.querySelector('form');
+        const inviteLink = form.elements.inviteLink.value;
+        
+        // Send request to backend
+        const response = await fetch('/api/boxes/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inviteLink })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Navigate to the specific chatroom
+          router.push(`/box/${data.boxId}`);
+        } else {
+          alert(data.message || 'Failed to join box');
+        }
+      } else if (type === 'create') {
+        // Get form data for creating a box
+        const form = document.querySelector('form');
+        const boxName = form.elements.boxName.value;
+        const description = form.elements.description.value;
+        
+        // Create form data for image upload
+        const formData = new FormData();
+        formData.append('boxName', boxName);
+        formData.append('description', description);
+        if (groupImage) {
+          formData.append('image', groupImage);
+        }
+        
+        // Send request to backend
+        const response = await fetch('/api/boxes/create', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Navigate to the newly created chatroom
+          router.push(`/box/${data.boxId}`);
+        } else {
+          alert(data.message || 'Failed to create box');
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Layout>
+    <Layout setSelectedChat={setSelectedChat}>
       <div className="flex h-screen bg-gray-100">
         {/* Chat list sidebar */}
         <div className="w-1/4 bg-gray-800 text-white p-4 overflow-y-auto">
@@ -190,53 +252,136 @@ const MainPage: React.FC = () => {
 
       {/* Modal for Join or Create Box */}
       {modalType !== "none" && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-gray-800 text-white w-80 p-4 rounded-lg shadow-lg">
-            {modalType === "join" && (
-              <>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">Join a Box</h3>
-                  <button onClick={() => setModalType("none")} className="text-gray-400 hover:text-gray-200 text-2xl leading-none">
-                    &times;
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Paste invite link..."
-                  className="w-full p-2 bg-gray-700 text-white rounded mb-4"
-                />
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mb-2">
-                  Join Box
-                </button>
-                <p className="text-xs text-gray-400">
-                  The invite link will be verified on the backend by extracting the token.
-                </p>
-              </>
-            )}
-            {modalType === "create" && (
-              <>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">Create a Box</h3>
-                  <button onClick={() => setModalType("none")} className="text-gray-400 hover:text-gray-200 text-2xl leading-none">
-                    &times;
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Enter box name..."
-                  className="w-full p-2 bg-gray-700 text-white rounded mb-4"
-                />
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded mb-2">
-                  Create Box
-                </button>
-                <p className="text-xs text-gray-400">
-                  A unique invite link will be generated for your box.
-                </p>
-              </>
-            )}
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-gray-800 text-white w-96 p-5 rounded-lg shadow-lg relative">
+      {modalType === "join" && (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          setIsLoading(true);
+          handleSubmit('join');
+        }}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Join a Box</h3>
+            <button 
+              type="button"
+              onClick={() => setModalType("none")} 
+              className="text-gray-400 hover:text-gray-200 text-2xl leading-none"
+            >
+              &times;
+            </button>
           </div>
-        </div>
+          <input
+            type="text"
+            name="inviteLink"
+            placeholder="Paste invite link..."
+            className="w-full p-2 bg-gray-700 text-white rounded mb-4"
+            required
+          />
+          <button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mb-2 relative"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : null}
+            <span className={isLoading ? "opacity-0" : ""}>Join Box</span>
+          </button>
+          <p className="text-xs text-gray-400">
+            The invite link will be verified on the backend by extracting the token.
+          </p>
+        </form>
       )}
+      
+      {modalType === "create" && (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          setIsLoading(true);
+          handleSubmit('create');
+        }}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Create a Box</h3>
+            <button 
+              type="button"
+              onClick={() => setModalType("none")} 
+              className="text-gray-400 hover:text-gray-200 text-2xl leading-none"
+            >
+              &times;
+            </button>
+          </div>
+          
+          {/* Group Image Upload */}
+          <div className="flex flex-col items-center mb-4">
+            <div className="relative">
+              {groupImage ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-700 mb-2">
+                  <img 
+                    src={URL.createObjectURL(groupImage)} 
+                    alt="Group" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+              )}
+              <label className="absolute bottom-0 right-0 bg-indigo-600 rounded-full p-1 cursor-pointer hover:bg-indigo-700 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => setGroupImage(e.target.files[0])}
+                />
+              </label>
+            </div>
+            <span className="text-xs text-gray-400">Add group photo</span>
+          </div>
+          
+          <input
+            type="text"
+            name="boxName"
+            placeholder="Enter box name..."
+            className="w-full p-2 bg-gray-700 text-white rounded mb-4"
+            required
+          />
+          
+          <textarea
+            name="description"
+            placeholder="Box description (optional)"
+            className="w-full p-2 bg-gray-700 text-white rounded mb-4 resize-none"
+            rows="3"
+          ></textarea>
+          
+          <button 
+            type="submit" 
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded mb-2 relative"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : null}
+            <span className={isLoading ? "opacity-0" : ""}>Create Box</span>
+          </button>
+          
+          <p className="text-xs text-gray-400">
+            A unique invite link will be generated for your box.
+          </p>
+        </form>
+      )}
+    </div>
+  </div>
+)}
     </Layout>
   );
 };
