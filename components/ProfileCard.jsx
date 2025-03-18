@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import AnimatedToolTip from './AnimatedToolTip';
 import Link from 'next/link';
+import Loader from './Loader'; // Import the Loader component
 
 // ShareModal component for selecting friends to share with
 const ShareModal = ({ isOpen, onClose, userId, onShare }) => {
@@ -9,6 +10,7 @@ const ShareModal = ({ isOpen, onClose, userId, onShare }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFriends, setSelectedFriends] = useState([]);
+  const [isSharing, setIsSharing] = useState(false);
   
   useEffect(() => {
     const fetchFriends = async () => {
@@ -44,8 +46,12 @@ const ShareModal = ({ isOpen, onClose, userId, onShare }) => {
   };
   
   const handleShare = () => {
-    onShare(selectedFriends);
-    onClose();
+    setIsSharing(true);
+    onShare(selectedFriends)
+      .finally(() => {
+        setIsSharing(false);
+        onClose();
+      });
   };
   
   if (!isOpen) return null;
@@ -55,12 +61,15 @@ const ShareModal = ({ isOpen, onClose, userId, onShare }) => {
       <StyledModal>
         <div className="modal-header">
           <h2>Share Profile</h2>
-          <button className="close-btn" onClick={onClose}>&times;</button>
+          <button className="close-btn" onClick={onClose} disabled={isSharing}>&times;</button>
         </div>
         
         <div className="modal-content">
           {isLoading ? (
-            <div className="loading">Loading friends...</div>
+            <div className="loading-container">
+              <Loader />
+              <div>Loading friends...</div>
+            </div>
           ) : error ? (
             <div className="error">{error}</div>
           ) : (
@@ -96,13 +105,13 @@ const ShareModal = ({ isOpen, onClose, userId, onShare }) => {
             {selectedFriends.length} friend{selectedFriends.length !== 1 ? 's' : ''} selected
           </div>
           <div className="buttons">
-            <button className="cancel-btn" onClick={onClose}>Cancel</button>
+            <button className="cancel-btn" onClick={onClose} disabled={isSharing}>Cancel</button>
             <button 
               className="share-btn" 
               onClick={handleShare}
-              disabled={selectedFriends.length === 0}
+              disabled={selectedFriends.length === 0 || isSharing}
             >
-              Share
+              {isSharing ? <><Loader size="small" /> Sharing...</> : 'Share'}
             </button>
           </div>
         </div>
@@ -129,6 +138,8 @@ export const ProfileCard = ({ userId, onClose, fetchUserProfile }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef(null);
   
   useEffect(() => {
@@ -154,6 +165,7 @@ export const ProfileCard = ({ userId, onClose, fetchUserProfile }) => {
   
   const handleShareProfile = async (selectedFriendIds) => {
     try {
+      setIsSharing(true);
       // Capture the profile card as an image if needed
       const profileImage = await captureProfileCard(cardRef);
       
@@ -176,26 +188,66 @@ export const ProfileCard = ({ userId, onClose, fetchUserProfile }) => {
       
       // Success notification could be added here
       console.log('Profile shared successfully');
+      return Promise.resolve();
     } catch (err) {
       console.error('Error sharing profile:', err);
       // Error notification could be added here
+      return Promise.reject(err);
+    } finally {
+      setIsSharing(false);
     }
   };
-  
+  const handleShareToGoogleContacts = async (userId) => {
+    try {
+      setIsSharing(true);
+      // Replace with your actual Google Contacts API endpoint
+      const response = await fetch('/api/google-contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add to Google Contacts');
+      }
+      
+      // Success notification
+      console.log('Added to Google Contacts successfully');
+      return Promise.resolve();
+    } catch (err) {
+      console.error('Error adding to Google Contacts:', err);
+      // Error notification
+      return Promise.reject(err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
   const openShareModal = () => {
     setIsShareModalOpen(true);
   };
   
   const closeShareModal = () => {
+    if (isSharing) return;
     setIsShareModalOpen(false);
   };
-  
+
+  const handleNavigation = () => {
+    setIsNavigating(true);
+    // The actual navigation will be handled by Next.js Link component
+  };
   
   if (isLoading) {
     return (
       <StyledWrapper>
         <div className="card">
-          <div className="loading">Loading profile...</div>
+          <div className="loading-container">
+            <Loader />
+            <div>Loading profile...</div>
+          </div>
         </div>
       </StyledWrapper>
     );
@@ -262,11 +314,43 @@ export const ProfileCard = ({ userId, onClose, fetchUserProfile }) => {
         </div>
         
         <div className="button-container">
-        <Link href={`/Profile/${userId}`}>
-    <button className="primary-btn">Full Profile</button>
-  </Link>
-  <button onClick={openShareModal} className="primary-btn">Share Profile</button>
-</div>
+          <Link href={`/Profile/${userId}`} passHref>
+            <button className="primary-btn" onClick={handleNavigation} disabled={isNavigating}>
+              {isNavigating ? (
+                <div className="button-content">
+                  <Loader size="small" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                'Full Profile'
+              )}
+            </button>
+          </Link>
+          <button onClick={openShareModal} className="primary-btn" disabled={isSharing}>
+            {isSharing ? (
+              <div className="button-content">
+                <Loader size="small" />
+                <span>Sharing...</span>
+              </div>
+            ) : (
+              'Share Profile'
+            )}
+          </button>
+        </div>
+
+        {/* Google Contacts Integration*/}
+{/* <div className="google-contacts">
+  <button onClick={handleShareToGoogleContacts} className="secondary-btn" disabled={isSharing}>
+    {isSharing ? (
+      <div className="button-content">
+        <Loader size="small" />
+        <span>Connecting...</span>
+      </div>
+    ) : (
+      'Add to Google Contacts'
+    )}
+  </button>
+</div> */}
       </div>
       
       {isShareModalOpen && (
@@ -279,6 +363,37 @@ export const ProfileCard = ({ userId, onClose, fetchUserProfile }) => {
       )}
     </StyledWrapper>
   );
+};
+
+// Function to handle sharing to Google contacts
+const handleShareToGoogleContacts = async (userId) => {
+  try {
+    setIsSharing(true);
+    // Replace with your actual Google Contacts API endpoint
+    const response = await fetch('/api/google-contacts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: userId
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to add to Google Contacts');
+    }
+    
+    // Success notification
+    console.log('Added to Google Contacts successfully');
+    return Promise.resolve();
+  } catch (err) {
+    console.error('Error adding to Google Contacts:', err);
+    // Error notification
+    return Promise.reject(err);
+  } finally {
+    setIsSharing(false);
+  }
 };
 
 // Additional styling for the new components
@@ -334,6 +449,11 @@ const StyledModal = styled.div`
       &:hover {
         color: red;
       }
+      
+      &:disabled {
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+      }
     }
   }
   
@@ -359,10 +479,14 @@ const StyledModal = styled.div`
       gap: 10px;
     }
     
-    .loading, .error {
+    .loading-container, .error {
       color: white;
       text-align: center;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
     }
   }
   
@@ -389,6 +513,9 @@ const StyledModal = styled.div`
         font-weight: bold;
         cursor: pointer;
         transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
       
       .cancel-btn {
@@ -397,6 +524,12 @@ const StyledModal = styled.div`
         
         &:hover {
           background: rgba(255, 255, 255, 0.3);
+        }
+        
+        &:disabled {
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.3);
+          cursor: not-allowed;
         }
       }
       
@@ -456,7 +589,7 @@ const StyledFriendItem = styled.div`
       right: 0;
       width: 20px;
       height: 20px;
-      background: red;
+      background: black;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -513,111 +646,146 @@ const StyledWrapper = styled.div`
     padding: 10px 0;
   }
 
-.profile-img {
-width: 4.8em;
-height: 4.8em;
-background: white;
-border-radius: 15px;
-margin: 1em auto;
-object-fit: cover;
-}
-.username {
-font-weight: bold;
-color: white;
-text-align: center;
-display: block;
-font-size: 1.2em;
-margin-top: 0.5em;
-}
-.info {
-font-weight: 400;
-color: white;
-display: block;
-text-align: center;
-font-size: 0.9em;
-margin: 1em 0;
-}
-.mutual-friends, .interests {
-margin: 1em 0;
-color: white;
-Copyh3 {
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 0.5em;
-  text-align: center;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5em;
+  .profile-img {
+    width: 4.8em;
+    height: 4.8em;
+    background: white;
+    border-radius: 15px;
+    margin: 1em auto;
+    object-fit: cover;
+  }
   
-  li {
+  .username {
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    display: block;
+    font-size: 1.2em;
+    margin-top: 0.5em;
+  }
+  
+  .info {
+    font-weight: 400;
+    color: white;
+    display: block;
+    text-align: center;
+    font-size: 0.9em;
+    margin: 1em 0;
+  }
+  
+  .mutual-friends, .interests {
+    margin: 1em 0;
+    color: white;
+    
+    h3 {
+      font-size: 0.9em;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+  }
+  
+  .genres {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5em;
+  }
+  
+  .genre-tag {
     font-size: 0.8em;
     background: rgba(255, 255, 255, 0.1);
     padding: 0.3em 0.6em;
     border-radius: 10px;
+    color: white;
   }
+  
+  .loading-container, .error {
+    color: white;
+    text-align: center;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .share {
+    margin-top: 1em;
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+  }
+  
+  .card a {
+    color: white;
+    transition: .4s ease-in-out;
+  }
+  
+  .card a:hover {
+    color: red;
+  }
+  
+  .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 1em;
+  }
+  
+  .card button {
+    padding: 0.8em 1.7em;
+    border-radius: 25px;
+    border: none;
+    font-weight: bold;
+    background: #ffffff;
+    color: rgb(0, 0, 0);
+    transition: .4s ease-in-out;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  
+  .card button:hover:not(:disabled) {
+  background: red;
+  color: white;
 }
+
+.card button:disabled {
+  background: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.5);
+  cursor: not-allowed;
 }
-.genres {
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 0.5em;
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.genre-tag {
-font-size: 0.8em;
-background: rgba(255, 255, 255, 0.1);
-padding: 0.3em 0.6em;
-border-radius: 10px;
-color: white;
+
+.primary-btn {
+  background: white;
+  color: black;
 }
-.loading, .error {
-color: white;
-text-align: center;
-margin: auto;
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  margin-top: 10px;
 }
-.share {
-margin-top: 1em;
-display: flex;
-justify-content: center;
-gap: 1em;
+
+.secondary-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
 }
-.card a {
-color: white;
-transition: .4s ease-in-out;
-}
-.card a:hover {
-color: red;
-}
-.card button {
-padding: 0.8em 1.7em;
-display: block;
-margin: 1em auto 0.5em;
-border-radius: 25px;
-border: none;
-font-weight: bold;
-background: #ffffff;
-color: rgb(0, 0, 0);
-transition: .4s ease-in-out;
-cursor: pointer;
-}
-.card button:hover {
-background: red;
-color: white;
-}
-.card .secondary-btn {
-background: rgba(255, 255, 255, 0.2);
-color: white;
-margin-top: 0.5em;
-}
-.card .secondary-btn:hover {
-background: rgba(255, 255, 255, 0.3);
+
+.google-contacts {
+  margin-top: 1em;
+  text-align: center;
 }
 `;
 
@@ -633,38 +801,6 @@ const captureProfileCard = async (cardRef) => {
   } catch (error) {
     console.error('Error capturing profile card:', error);
     return null;
-  }
-};
-
-// Updated share handler to include profile image
-const handleShareProfile = async (selectedFriendIds) => {
-  try {
-    // Capture the profile card as an image
-    const cardRef = React.createRef();
-    const profileImage = await captureProfileCard(cardRef);
-    
-    // Replace with your actual share API endpoint
-    const response = await fetch('/api/share-profile', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        profileId: userId,
-        friendIds: selectedFriendIds,
-        profileImage: profileImage // Send the image data along with the request
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to share profile');
-    }
-    
-    // Success notification
-    toast.success('Profile shared successfully');
-  } catch (err) {
-    console.error('Error sharing profile:', err);
-    toast.error('Failed to share profile');
   }
 };
 
