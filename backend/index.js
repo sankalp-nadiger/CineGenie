@@ -23,7 +23,7 @@ dotenv.config({ path: './.env.local' });
 // });
 
 const startServer = async () => {
-    try {
+    try {console.log("MONGODB_URI:", process.env.MONGODB_URI);
         await connectDB();
         const PORT = process.env.PORT || 8000;
         app.listen(PORT, () => {  // Start server with WebSockets
