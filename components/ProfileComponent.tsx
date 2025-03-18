@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import { Film, Star, Award, Calendar, Clock, User, Heart } from 'lucide-react';
+import { Film, Star, Award, Calendar, Clock, User, Heart, LogOut } from 'lucide-react';
 import { Layout } from '@/components/Layout';
 import { ProfileHeader } from '@/components/EditProfile'
 import { useParams } from 'next/navigation';
@@ -105,6 +105,12 @@ interface UserProfileProps {
     };
   }, []);
 
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log("User logged out");
+    // Typically you would clear auth tokens and redirect to login page
+    // For example: router.push('/login')
+  };
 
   return (
     <>
@@ -151,10 +157,22 @@ interface UserProfileProps {
             </div>
 
             <div className="flex-1">
-              <ProfileHeader 
-                userData={userData}
-                isCurrentUser={isCurrentUser}
-              />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                <ProfileHeader 
+                  userData={userData}
+                  isCurrentUser={isCurrentUser}
+                />
+                
+                {isCurrentUser && (
+                  <button 
+                    onClick={handleLogout}
+                    className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                )}
+              </div>
               
               <p className="mt-4 text-gray-300 leading-relaxed">{userData.bio}</p>
               
@@ -332,6 +350,19 @@ interface UserProfileProps {
               </div>
             </div>
           </div>
+          
+          {/* Bottom Logout Button (Alternative Location) */}
+          {isCurrentUser && (
+            <div className="mt-12 text-center">
+              <button 
+                onClick={handleLogout}
+                className="hidden px-6 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
       </Layout>
