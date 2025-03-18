@@ -4,8 +4,9 @@ import { NextPage } from 'next';
 import Head from 'next/head';
 import { Film, Star, Award, Calendar, Clock, User, Heart, LogOut } from 'lucide-react';
 import { Layout } from '@/components/Layout';
-import { ProfileHeader } from '@/components/EditProfile'
-import { useParams } from 'next/navigation';
+import axios from 'axios';
+import { ProfileActions } from './FollowButton'; // Import from the file where you'll place the components
+
 interface Movie {
   id: number;
   title: string;
@@ -15,12 +16,14 @@ interface Movie {
   rating: number;
   genre: string;
 }
+
 interface UserProfileProps {
-    userId?: string | string[] | null;
-  }
-  const UserProfile: NextPage<UserProfileProps> = ({ userId: id }) => {
-  // Sample user data
-  const userData = {
+  userId?: string | null;
+}
+
+export const UserProfile: NextPage<UserProfileProps> = ({ userId }) => {
+  // Sample user data - in a real app, you'd fetch this based on userId
+  const [userData, setUserData] = useState({
     username: "CinePhantom",
     avatar: "/api/placeholder/100/100",
     joinDate: "2024-07-15",
@@ -30,7 +33,7 @@ interface UserProfileProps {
     following: 97,
     favoriteGenres: ["Sci-Fi", "Thriller", "Film Noir", "Cyberpunk"],
     bio: "Exploring the depths of cinema, one frame at a time. Particularly drawn to mind-bending narratives and visionary directors pushing the boundaries of storytelling.",
-  };
+  });
 
   // Sample movies
   const [favoriteMovies] = useState<Movie[]>([
@@ -71,15 +74,55 @@ interface UserProfileProps {
     { type: "followed", user: "FilmOracle", time: "3 days ago" },
   ];
   
+  // State variables for user relationship
   const [isCurrentUser, setIsCurrentUser] = useState(true);
-  const params = useParams();
-  const user_id = params.id;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
-    setIsCurrentUser(user_id === undefined || user_id === null);
-  }, [id]);
+    const fetchUserData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // In a real implementation, this would be your API call
+        // const response = await axios.get(`/api/users/${userId}`, {
+        //   withCredentials: true
+        // });
+        
+        // For demo, simulate API response
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Determine if this is current user's profile or someone else's
+        const isOwnProfile = userId === undefined || userId === null;
+        
+        // If viewing someone else's profile, determine follow status
+        let followStatus = false;
+        if (!isOwnProfile) {
+          // In real implementation:
+          // const followResponse = await axios.get(`/api/users/${userId}/follow-status`, {
+          //   withCredentials: true
+          // });
+          // followStatus = followResponse.data.isFollowing;
+          
+          // For demo, randomize follow status
+          followStatus = Math.random() > 0.5;
+        }
+        
+        setIsCurrentUser(isOwnProfile);
+        setIsFollowing(followStatus);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [userId]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Animation for film reel
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -109,88 +152,91 @@ interface UserProfileProps {
     // Implement logout logic here
     console.log("User logged out");
     // Typically you would clear auth tokens and redirect to login page
-    // For example: router.push('/login')
+    // Example: router.push('/login')
   };
 
   return (
     <>
-    <Layout>
-             <Head>
-        <title>{userData.username} | CineFuture Profile</title>
-        <meta name="description" content="User profile for CineFuture - The ultimate platform for cinema enthusiasts" />
-      </Head>
+      <Layout>
+        <Head>
+          <title>{userData.username} | CineFuture Profile</title>
+          <meta name="description" content="User profile for CineFuture - The ultimate platform for cinema enthusiasts" />
+        </Head>
 
-      <div className="min-h-screen bg-gray-900 text-gray-100">
-        {/* Animated film reel header */}
-        <div className="h-32 overflow-hidden relative bg-black">
-      <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-blue-600 to-purple-600" />
-      <div className="absolute inset-0 overflow-hidden">
-        <div ref={containerRef} className="flex items-center absolute">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <div 
-              key={i} 
-              className="film-cell h-32 w-16 border-r border-gray-800 flex-shrink-0 relative"
-            >
-              <div className="absolute top-4 left-4 w-8 h-8 bg-black rounded-full border border-gray-700"></div>
-              <div className="absolute bottom-4 left-4 w-8 h-8 bg-black rounded-full border border-gray-700"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Profile Header */}
-          <div className="flex flex-col md:flex-row items-start gap-8 mb-12">
-            {/* Avatar & Basic Info */}
-            <div className="relative">
-              <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg shadow-blue-500/50">
-                <img 
-                  src={userData.avatar} 
-                  alt={userData.username} 
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-2 -right-2 bg-purple-600 rounded-full p-2">
-                <Award className="h-5 w-5" />
-              </div>
-            </div>
-
-            <div className="flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                <ProfileHeader 
-                  userData={userData}
-                  isCurrentUser={isCurrentUser}
-                />
-                
-                {isCurrentUser && (
-                  <button 
-                    onClick={handleLogout}
-                    className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors"
+        <div className="min-h-screen bg-gray-900 text-gray-100">
+          {/* Animated film reel header */}
+          <div className="h-32 overflow-hidden relative bg-black">
+            <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-blue-600 to-purple-600" />
+            <div className="absolute inset-0 overflow-hidden">
+              <div ref={containerRef} className="flex items-center absolute">
+                {Array.from({ length: 60 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="film-cell h-32 w-16 border-r border-gray-800 flex-shrink-0 relative"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                )}
-              </div>
-              
-              <p className="mt-4 text-gray-300 leading-relaxed">{userData.bio}</p>
-              
-              <div className="mt-6 flex flex-wrap gap-2">
-                {userData.favoriteGenres.map((genre, index) => (
-                  <span 
-                    key={index} 
-                    className="px-3 py-1 bg-gray-800 rounded-full text-xs font-medium text-blue-300 border border-blue-500/30"
-                  >
-                    {genre}
-                  </span>
+                    <div className="absolute top-4 left-4 w-8 h-8 bg-black rounded-full border border-gray-700"></div>
+                    <div className="absolute bottom-4 left-4 w-8 h-8 bg-black rounded-full border border-gray-700"></div>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          <div className="max-w-6xl mx-auto px-4 py-8">
+            {/* Profile Header */}
+            <div className="flex flex-col md:flex-row items-start gap-8 mb-12">
+              {/* Avatar & Basic Info */}
+              <div className="relative">
+                <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg shadow-blue-500/50">
+                  <img 
+                    src={userData.avatar} 
+                    alt={userData.username} 
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-purple-600 rounded-full p-2">
+                  <Award className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold">{userData.username}</h1>
+                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Joined {new Date(userData.joinDate).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Use our new ProfileActions component */}
+                  {isLoading ? (
+                    <div className="mt-4 sm:mt-0 h-10 w-24 bg-gray-800 rounded-md animate-pulse"></div>
+                  ) : (
+                    <ProfileActions 
+                      userId={userId} 
+                      isCurrentUser={isCurrentUser} 
+                      initialFollowStatus={isFollowing} 
+                    />
+                  )}
+                </div>
+                
+                <p className="mt-4 text-gray-300 leading-relaxed">{userData.bio}</p>
+                
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {userData.favoriteGenres.map((genre, index) => (
+                    <span 
+                      key={index} 
+                      className="px-3 py-1 bg-gray-800 rounded-full text-xs font-medium text-blue-300 border border-blue-500/30"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -356,15 +402,15 @@ interface UserProfileProps {
             <div className="mt-12 text-center">
               <button 
                 onClick={handleLogout}
-                className="hidden px-6 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2"
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-md text-m font-medium transition-colors inline-flex items-center gap-2"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-5 w-5" />
                 Logout
               </button>
             </div>
           )}
+          </div>
         </div>
-      </div>
       </Layout>
 
       <style jsx global>{`
