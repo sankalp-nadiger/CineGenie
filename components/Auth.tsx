@@ -483,6 +483,7 @@ const Auth: React.FC = () => {
     }
   };
   
+
   const handleBioSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -491,20 +492,46 @@ const Auth: React.FC = () => {
     setShowMessage(true);
   
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-          bio: formData.bio,
-        }),
-      });
-  
-      const data = await response.json();
+      // If it's a Google auth flow, just update the bio
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Update bio only
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/update-bio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            bio: formData.bio,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          setIsLoading(false);
+          setCharacterState('celebrating');
+          setStage(4); // Move to the next stage
+        } else {
+          throw new Error(data.message || 'Something went wrong');
+        }
+      } else {
+        // Normal registration flow
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            username: formData.username,
+            bio: formData.bio,
+          }),
+        });
+      
+        const data = await response.json();
   
       if (response.ok) {
         setIsLoading(false);
@@ -513,34 +540,87 @@ const Auth: React.FC = () => {
       } else {
         throw new Error(data.message || 'Something went wrong');
       }
-    } catch (error) {
+      }
+    } catch (error: any) {
       setIsLoading(false);
       setCharacterState('error');
-      setAvatarMessage((error as Error).message);
+      setAvatarMessage(error.message || "An error occurred");
       setShowMessage(true);
-      setTimeout(() => {
-        setShowMessage(false);
-        setCharacterState('idle');
-      }, 3000);
     }
   };
-  
  
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setCharacterState('processing');
     setAvatarMessage("Connecting to Google...");
     setShowMessage(true);
     
-    setTimeout(() => {
-      setIsLoading(false);
-      if (isSignIn) {
-        router.push('/MainPage');
-      } else {
-        setCharacterState('celebrating');
-        setStage(3);
+    try {
+      // Get Google auth URL from backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google-url`);
+      const data = await response.json();
+      
+      // Open popup for Google auth
+      const popup = window.open(
+        data.url, 
+        "googleAuth", 
+        "width=500,height=600,left=100,top=100"
+      );
+      
+      if (!popup) {
+        throw new Error("Popup blocked. Please allow popups for this site.");
       }
-    }, 2000);
+      
+      // Listen for messages from popup
+      window.addEventListener("message", async (event) => {
+        if (event.data.type === "google-oauth" && event.data.code) {
+          // Close popup
+          popup.close();
+          
+          // Process the auth code
+          const authCode = event.data.code;
+          
+          // Send code to backend
+          const authResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google/callback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: authCode })
+          });
+          
+          const authData = await authResponse.json();
+          
+          if (authResponse.ok) {
+            if (authData.success) {
+              // Store JWT token
+              localStorage.setItem('token', authData.jwt);
+              console.log('User logged in token:', authData.jwt);
+              
+              // If new user or bio needed, go to bio stage
+              if (!authData.user.bio) {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  email: authData.user.email,
+                  username: authData.user.username || ''
+                }));
+                setStage(3); // Go to bio stage
+              } else {
+                router.push('/MainPage');
+              }
+            } else {
+              throw new Error(authData.message);
+            }
+          } else {
+            throw new Error('Authentication failed');
+          }
+        }
+        setIsLoading(false);
+      });
+    } catch (error: any) {
+      setIsLoading(false);
+      setCharacterState('error');
+      setAvatarMessage(error.message || "An error occurred");
+      setShowMessage(true);
+    }
   };
 
   const goToDashboard = () => {
