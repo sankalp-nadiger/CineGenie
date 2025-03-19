@@ -440,7 +440,8 @@ const handleSubmit = async (e: React.FormEvent) => {
   setShowMessage(true);
 
   try {
-    const response = await fetch(`${process.env.API_BASE_URL}${isSignIn ? '/api/login' : '/api/register'}`, {
+    console.log(import.meta.env.VITE_API_BASE_URL);
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${isSignIn ? '/api/auth/login' : '/api/auth/register'}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

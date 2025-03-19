@@ -6,26 +6,14 @@ import { ApiError } from "../utils/API_Error.js";
 import asyncHandler from "../utils/asynchandler.utils.js";
 import { generateAccessAndRefreshTokens } from "../middlewares/auth.middleware.js";
 
-// Utility functions
-
-const saveUserMood = async (userId, mood) => {
-  // Implement the logic to save user mood
-  console.log(`Saving mood for user ${userId}: ${mood}`);
-};
-
-const getRandomActivity = () => {
-  const activities = ["Watch a movie", "Read a book", "Go for a walk"];
-  return activities[Math.floor(Math.random() * activities.length)];
-};
 
 // Controller functions
 
 const registerUser = asyncHandler(async (req, res) => {
   try {
-    const { fullName, email, username, password, gender, age, location } = req.body;
-    const idCardFile = req.file?.path;
-
-    if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
+    const { email, username, password } = req.body;
+    console.log("Request body:", req.body);
+    if ([email, username, password].some((field) => field?.trim() === "")) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -35,36 +23,16 @@ const registerUser = asyncHandler(async (req, res) => {
       return res.status(409).json({ success: false, message: "User with email or username already exists" });
     }
 
-    if (age < 18 && !idCardFile) {
-      return res.status(400).json({ success: false, message: "ID card upload mandatory for students" });
-    }
-
-    // Process location
-    let parsedLocation;
-    try {
-      parsedLocation = JSON.parse(location);
-      if (!parsedLocation.type || !parsedLocation.coordinates) {
-        throw new Error("Invalid location format");
-      }
-    } catch (error) {
-      return res.status(400).json({ success: false, message: "Invalid location JSON format" });
-    }
-
     // Create user
     const user = await User.create({
-      fullName,
       email,
       password,
-      gender,
-      age,
       username: username.toLowerCase(),
-      idCard: idCardFile,
-      location: parsedLocation,
     });
 
     console.log("User successfully created:", user);
-    await user.assignRandomAvatar(); 
-    await user.save();
+    // await user.assignRandomAvatar(); 
+    // await user.save();
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);

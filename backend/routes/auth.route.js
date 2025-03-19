@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
+// Variable to track signing-in state
+let isSigning = false;
+
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
@@ -40,37 +43,35 @@ router.get("/auth/google-url", (req, res) => {
 });
 
 router.post("/auth/google/callback", async (req, res) => {
+    isSigning = true; // Start signing process
     const { code } = req.body;
     console.log('Received code:', code);
 
     if (!code) {
+        isSigning = false;
         return res.status(400).json({
             success: false,
             message: "No authorization code provided"
         });
     }
+
     const oauth2Client = signupOAuthClient;
     try {
-        // Exchange code for tokens with correct parameters
         const { tokens } = await oauth2Client.getToken({
             code: code,
-            redirect_uri: oauth2Client.redirectUri  // This is crucial
+            redirect_uri: oauth2Client.redirectUri
         });
 
         console.log('Token exchange successful');
         oauth2Client.setCredentials(tokens);
 
-        // Get user info from Google
-        const oauth2 = google.oauth2({
-            version: "v2",
-            auth: oauth2Client
-        });
+        const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
         const { data: googleUser } = await oauth2.userinfo.get();
 
-        // Store user info in database
         let user = await User.findOne({ email: googleUser.email });
         if (user) {
-            return res.status(409).json({  // 409 Conflict for already existing user
+            isSigning = false;
+            return res.status(409).json({
                 success: false,
                 message: "User already exists. Please sign in instead."
             });
@@ -87,25 +88,26 @@ router.post("/auth/google/callback", async (req, res) => {
                 tokens: {
                     googleFitToken: tokens.access_token,
                     googleFitTokenExpiry: new Date(tokens.expiry_date),
-                    refreshToken: tokens.refresh_token  // Store refresh token if available
+                    refreshToken: tokens.refresh_token
                 },
             });
             await user.save();
         } else {
-            // Update existing user's tokens
             user.tokens = {
                 googleFitToken: tokens.access_token,
                 refreshToken: tokens.refresh_token
             };
             await user.save();
         }
+
         const activity = getRandomActivity();
         const jwtToken = jwt.sign(
             { userId: user._id },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "7d" }
         );
-        console.log(jwtToken);
+
+        isSigning = false; // Reset signing status
         res.json({
             success: true,
             jwt: jwtToken,
@@ -120,11 +122,7 @@ router.post("/auth/google/callback", async (req, res) => {
 
     } catch (error) {
         console.error("Google OAuth Error:", error);
-        console.error("Error details:", {
-            message: error.message,
-            response: error.response?.data
-        });
-
+        isSigning = false; // Reset signing status on error
         res.status(500).json({
             success: false,
             message: "Google authentication failed",
@@ -134,7 +132,6 @@ router.post("/auth/google/callback", async (req, res) => {
 });
 
 router.get("/auth/login-google", async (req, res) => {
-    // Generate Google OAuth URL for fresh token each time
     const oauth2Client = loginOAuthClient;
     const authUrl = oauth2Client.generateAuthUrl({
         access_type: "offline",
@@ -149,52 +146,51 @@ router.get("/auth/login-google", async (req, res) => {
 });
 
 router.post("/auth/google/check-login", async (req, res) => {
+    isSigning = true; // Start signing process
     const { code } = req.body;
-    console.log(code)
+    console.log(code);
+
     if (!code) {
+        isSigning = false;
         return res.status(400).json({ success: false, message: "No authorization code provided" });
     }
+
     const oauth2Client = loginOAuthClient;
     try {
-        // Exchange code for tokens
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
 
-        // Get user info from Google
         const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
         const { data: googleUser } = await oauth2.userinfo.get();
 
-        // Check if user exists in the database
         let user = await User.findOne({ email: googleUser.email });
 
         if (!user) {
+            isSigning = false;
             return res.status(404).json({ success: false, message: "User does not exist. Please sign up first." });
         }
-        if (user) {
-            // Update access & refresh tokens
-            user.tokens.googleFitToken = tokens.access_token;
-            user.tokens.googleFitTokenExpiry = Date.now() + tokens.expiry_date;
 
-            // Only update refresh token if a new one is provided
-            if (tokens.refresh_token) {
-                user.tokens.refreshToken = tokens.refresh_token;
-            }
+        user.tokens.googleFitToken = tokens.access_token;
+        user.tokens.googleFitTokenExpiry = Date.now() + tokens.expiry_date;
 
-            await user.save();
+        if (tokens.refresh_token) {
+            user.tokens.refreshToken = tokens.refresh_token;
         }
 
-        // Generate JWT for the existing user
+        await user.save();
+
         const jwtToken = jwt.sign(
-            { _id: user._id },  // Ensure _id is used to match the verifyJWT function
+            { _id: user._id },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "7d" }
         );
 
-        console.log(jwtToken)
-        res.json({ success: true, jwt: jwtToken, user, suggestedActivity: activity });
+        isSigning = false; // Reset signing status
+        res.json({ success: true, jwt: jwtToken, user, suggestedActivity: getRandomActivity() });
 
     } catch (error) {
         console.error("Google OAuth Error:", error);
+        isSigning = false; // Reset signing status on error
         res.status(500).json({ success: false, message: "Google authentication failed" });
     }
 });
