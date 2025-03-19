@@ -25,7 +25,9 @@ const ThreeCharacter: React.FC<ThreeCharacterProps> = ({ state }) => {
 
   useEffect(() => {
     if (!mountRef.current) return;
-
+    while (mountRef.current.firstChild) {
+      mountRef.current.removeChild(mountRef.current.firstChild);
+    }
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);

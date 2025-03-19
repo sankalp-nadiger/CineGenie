@@ -11,9 +11,9 @@ import { generateAccessAndRefreshTokens } from "../middlewares/auth.middleware.j
 
 const registerUser = asyncHandler(async (req, res) => {
   try {
-    const { email, username, password } = req.body;
-    console.log("Request body:", req.body);
-    if ([email, username, password].some((field) => field?.trim() === "")) {
+    const { email, username, password, bio } = req.body;
+    //console.log("Request body:", req.body);
+    if ([email, username, password, bio].some((field) => field?.trim() === "")) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -28,6 +28,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email,
       password,
       username: username.toLowerCase(),
+      bio
     });
 
     console.log("User successfully created:", user);
@@ -66,13 +67,13 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { username, password, email, mood } = req.body;
+  const { password, email} = req.body;
   console.log("Request body:", req.body);
-  if (!username) {
-    throw new ApiError(400, "Username is required");
+  if (!email) {
+    throw new ApiError(400, "Email is required");
   }
 
-  const user = await User.findOne({ $or: [{ username }, { email }] });
+  const user = await User.findOne( { email } );
   if (!user) {
     throw new ApiError(404, "User does not exist");
   }
@@ -91,8 +92,6 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  const randomActivity = getRandomActivity();
-  await saveUserMood(user._id, mood);
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -102,7 +101,6 @@ const loginUser = asyncHandler(async (req, res) => {
         user: loggedInUser,
         accessToken,
         refreshToken,
-        suggestedActivity: randomActivity,
       }, "User logged in successfully"),
     );
 });

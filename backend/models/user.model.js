@@ -9,5 +9,9 @@ const UserSchema = new mongoose.Schema({
   groups: [{ type: mongoose.Schema.Types.ObjectId, ref: "Group" }],
 });
 
+UserSchema.methods.isPasswordCorrect = async function (password) {
+  return await password== this.password;
+};
+
 const User = mongoose.model("User", UserSchema);
 export default User;

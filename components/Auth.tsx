@@ -431,68 +431,101 @@ const Auth: React.FC = () => {
     }, 3000);
   };
 
-  // filepath: /Users/ritheshn/Desktop/desktop/Movie-Tracker/components/Auth.tsx
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setCharacterState('processing');
-  setAvatarMessage("Finalizing your account...");
-  setShowMessage(true);
-
-  try {
-    console.log(import.meta.env.VITE_API_BASE_URL);
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${isSignIn ? '/api/auth/login' : '/api/auth/register'}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-        ...(isSignIn ? {} : { username: formData.username }),
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setIsLoading(false);
-      setCharacterState('celebrating');
-      if (isSignIn) {
-        // Redirect to dashboard for sign in
-        router.push('/MainPage');
-      } else {
-        // For signup, go to bio form
-        setStage(3);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setCharacterState('processing');
+    setAvatarMessage(isSignIn ? "Signing you in..." : "Finalizing your account...");
+    setShowMessage(true);
+  
+    if (isSignIn) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          setCharacterState('celebrating');
+          setAvatarMessage("Login successful! Taking you to your dashboard!");
+          setShowMessage(true);
+          
+          setTimeout(() => {
+            router.push('/MainPage'); 
+          }, 2000); 
+        } else {
+          throw new Error(data.message || 'Something went wrong');
+        }
+      } catch (error) {
+        setIsLoading(false);
+        setCharacterState('error');
+        setAvatarMessage((error as Error).message);
+        setShowMessage(true);
+        setTimeout(() => {
+          setShowMessage(false);
+          setCharacterState('idle');
+        }, 3000);
       }
     } else {
-      throw new Error(data.message || 'Something went wrong');
+      // Navigate to bio form (stage 3) if signing up
+      setTimeout(() => {
+        setIsLoading(false);
+        setStage(3);
+      }, 1000);
     }
-  } catch (error) {
-    setIsLoading(false);
-    setCharacterState('error');
-    setAvatarMessage((error as Error).message);
-    setShowMessage(true);
-    setTimeout(() => {
-      setShowMessage(false);
-      setCharacterState('idle');
-    }, 3000);
-  }
-};
-  const handleBioSubmit = (e: React.FormEvent) => {
+  };
+  
+  const handleBioSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setCharacterState('processing');
     setAvatarMessage("Saving your profile...");
     setShowMessage(true);
-    
-    setTimeout(() => {
+  
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+          bio: formData.bio,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        setIsLoading(false);
+        setCharacterState('celebrating');
+        setStage(4); // Move to the next stage
+      } else {
+        throw new Error(data.message || 'Something went wrong');
+      }
+    } catch (error) {
       setIsLoading(false);
-      setCharacterState('celebrating');
-      setStage(4);
-    }, 2000);
+      setCharacterState('error');
+      setAvatarMessage((error as Error).message);
+      setShowMessage(true);
+      setTimeout(() => {
+        setShowMessage(false);
+        setCharacterState('idle');
+      }, 3000);
+    }
   };
-
+  
+ 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
     setCharacterState('processing');
@@ -555,12 +588,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     <StyledWrapper>
       <div className="flex items-center justify-center min-h-screen bg-dark p-4">
         <div className="relative w-full max-w-md">
-          <div className="absolute -left-32 -bottom-4 w-32 h-64 cursor-pointer" onClick={interactWithCharacter}>
-            <ThreeCharacter state={characterState} />
-            <AnimatePresence>
-              {showMessage && <SpeechBubble message={avatarMessage} show={showMessage} />}
-            </AnimatePresence>
-          </div>
+        <div className="absolute -left-32 -bottom-4 w-32 h-64 cursor-pointer z-20" onClick={interactWithCharacter}>
+  <ThreeCharacter state={characterState} />
+  <AnimatePresence>
+    {showMessage && <SpeechBubble message={avatarMessage} show={showMessage} />}
+  </AnimatePresence>
+</div>
           
           <motion.div 
             className="form-container ml-32 md:ml-0"
