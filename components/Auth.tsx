@@ -431,14 +431,31 @@ const Auth: React.FC = () => {
     }, 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setCharacterState('processing');
-    setAvatarMessage("Finalizing your account...");
-    setShowMessage(true);
-    
-    setTimeout(() => {
+  // filepath: /Users/ritheshn/Desktop/desktop/Movie-Tracker/components/Auth.tsx
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setCharacterState('processing');
+  setAvatarMessage("Finalizing your account...");
+  setShowMessage(true);
+
+  try {
+    console.log(import.meta.env.VITE_API_BASE_URL);
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${isSignIn ? '/api/auth/login' : '/api/auth/register'}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        ...(isSignIn ? {} : { username: formData.username }),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       setIsLoading(false);
       setCharacterState('celebrating');
       if (isSignIn) {
@@ -448,9 +465,20 @@ const Auth: React.FC = () => {
         // For signup, go to bio form
         setStage(3);
       }
-    }, 2000);
-  };
-
+    } else {
+      throw new Error(data.message || 'Something went wrong');
+    }
+  } catch (error) {
+    setIsLoading(false);
+    setCharacterState('error');
+    setAvatarMessage((error as Error).message);
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+      setCharacterState('idle');
+    }, 3000);
+  }
+};
   const handleBioSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
