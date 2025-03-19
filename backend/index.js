@@ -3,7 +3,7 @@ import connectDB from "./utils/db.connect.js";
 import app from './app.js';
 // import { Server } from "socket.io";
 // import http from "http";
-dotenv.config({ path: './.env.local' });
+dotenv.config({ path: './.env' });
 
 // const server = http.createServer(app);  // Create HTTP server for WebSockets
 
@@ -25,7 +25,7 @@ dotenv.config({ path: './.env.local' });
 const startServer = async () => {
     try {console.log("MONGODB_URI:", process.env.MONGODB_URI);
         await connectDB();
-        const PORT = process.env.PORT || 8000;
+        const PORT = process.env.PORT || 4000;
         app.listen(PORT, () => {  // Start server with WebSockets
             console.log(`⚙️ Server is running at port: ${PORT}`);
         });

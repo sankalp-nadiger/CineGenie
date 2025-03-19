@@ -18,7 +18,6 @@ app.use("/group", groupRoutes);
 app.use("/movie", movieRoutes);
 app.use("/search", searchRoutes);
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 export default app;
